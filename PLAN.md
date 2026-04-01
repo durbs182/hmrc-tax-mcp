@@ -58,8 +58,13 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain UK tax strateg
 - [x] `explainer.py` — deterministic AST → prose; comma-formatted numbers; coverage for CONST, BAND_APPLY, TAPER, IF, arithmetic nodes
 - [x] 46 new tests (test_explainer.py + test_mcp_tools.py); **189 total tests passing**
 
-### Phase 6 — NL Extractor
-- [ ] `nl-extractor` — LLM (Anthropic Claude) → DSL with mandatory human review gate
+### Phase 6 — NL Extractor ✅
+- [x] `nl-extractor` — `NLExtractor` class: HMRC prose → draft DSL via Anthropic Claude
+- [x] `ExtractionResult` dataclass: `reviewed_by`, `requires_review`, `to_registry_dict()`, `warnings`
+- [x] `_parse_response()`: JSON delimiter (`<<<JSON / JSON>>>`), markdown fence stripping, fallback handling
+- [x] `extract_rule` MCP tool wired into server.py — returns draft, checksum, compile error, review gate
+- [x] All output permanently tagged `reviewed_by: null` — mandatory human review before publication
+- [x] 32 new tests (all mocked — no real API calls); **221 total tests passing**
 
 ### Phase 7 — Scottish Income Tax
 - [ ] `scotland-rules` — Scottish income tax bands 2025–26; jurisdiction field support

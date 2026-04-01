@@ -21,14 +21,14 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain tax strategies
 | Rule Registry | `registry/model.py`, `registry/store.py`, `registry/rules/` | Versioned, hashed, citable YAML rule store |
 | Validation Pipeline | `validation/pipeline.py` | 6-stage pipeline incl. HMRC worked examples |
 | MCP Server | `server.py` | Stateless tool layer for AI agents (stdio transport) |
-| NL Extractor | `extractor/nl_extractor.py` | LLM-assisted HMRC prose → DSL *(coming in Phase 6)* |
+| NL Extractor | `extractor/nl_extractor.py` | LLM-assisted HMRC prose → DSL (mandatory human review gate) |
 
 ## Quick Start
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                # 189 tests
+pytest                # 221 tests
 hmrc-tax-mcp          # starts MCP server on stdio (requires Python ≥3.10 + pip install -e ".[server]")
 ```
 
@@ -42,8 +42,19 @@ hmrc-tax-mcp          # starts MCP server on stdio (requires Python ≥3.10 + pi
 | `tax.get_rule_snapshot` | ✅ live | Full rule set for a tax year + jurisdiction |
 | `compile_dsl` | ✅ live | Compile DSL text → AST + SHA-256 checksum |
 | `validate_rule` | ✅ live | Run the 6-stage validation pipeline on a rule |
-| `explain_rule` | ✅ Phase 5 | Human-readable rule explanation |
-| `trace_execution` | ✅ Phase 5 | Structured execution trace for audit |
+| `explain_rule` | ✅ live | Human-readable rule explanation |
+| `trace_execution` | ✅ live | Structured execution trace for audit |
+| `extract_rule` | ✅ live | LLM-assisted HMRC prose → draft DSL (requires ANTHROPIC_API_KEY) |
+
+### NL Extractor & Human Review Gate
+
+`extract_rule` submits HMRC legislative prose to Claude and returns a draft DSL rule.
+**The result is always marked `reviewed_by: null`** — publication to the registry is
+blocked until a human engineer:
+
+1. Verifies every numeric value against the original HMRC source
+2. Runs `validate_rule` on the compiled draft
+3. Sets `reviewed_by` to their name/email in the YAML file
 
 ## Tax Years Covered
 
@@ -95,7 +106,7 @@ Every rule passes 6 stages before publication:
 | 3 | 2025–26 rUK rule set (11 rules) | ✅ done |
 | 4 | 6-stage validation pipeline | ✅ done |
 | 5 | MCP server remaining tools (explain_rule, trace_execution) | ✅ done |
-| 6 | NL extractor (LLM-assisted, human-reviewed) | ⏳ |
+| 6 | NL extractor (LLM-assisted, human-reviewed) | ✅ |
 | 7 | Scottish income tax jurisdiction | ⏳ |
 | 8 | Integration guide for later-life-planner | ⏳ |
 
