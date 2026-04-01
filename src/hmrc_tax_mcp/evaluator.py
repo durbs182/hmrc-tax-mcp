@@ -110,32 +110,38 @@ class Evaluator:
         # ------------------------------------------------------------------
         if t == "ADD":
             args = [self.eval(a, depth + 1) for a in node["args"]]
-            result = Decimal(sum(a for a in args if isinstance(a, Decimal)))
+            dec_args = self._require_decimal_args(args, "ADD")
+            result = Decimal(sum(dec_args))
             self._record(t, {"args": args}, result)
             return result
 
         if t == "SUB":
             args = [self.eval(a, depth + 1) for a in node["args"]]
-            dec_args = [a for a in args if isinstance(a, Decimal)]
+            dec_args = self._require_decimal_args(args, "SUB")
+            if len(dec_args) < 2:
+                raise EvaluationError("SUB: requires at least 2 arguments")
             result = dec_args[0] - sum(dec_args[1:])
             self._record(t, {"args": args}, result)
             return result
 
         if t == "MUL":
             args = [self.eval(a, depth + 1) for a in node["args"]]
+            dec_args = self._require_decimal_args(args, "MUL")
             result = Decimal("1")
-            for a in args:
-                if isinstance(a, Decimal):
-                    result *= a
+            for a in dec_args:
+                result *= a
             self._record(t, {"args": args}, result)
             return result
 
         if t == "DIV":
             args = [self.eval(a, depth + 1) for a in node["args"]]
-            a0, a1 = args[0], args[1]
-            if isinstance(a1, Decimal) and a1 == 0:
+            dec_args = self._require_decimal_args(args, "DIV")
+            if len(dec_args) != 2:
+                raise EvaluationError("DIV: requires exactly 2 arguments")
+            a0, a1 = dec_args
+            if a1 == 0:
                 raise EvaluationError("Division by zero")
-            result = a0 / a1  # type: ignore[assignment]
+            result = a0 / a1
             self._record(t, {"args": args}, result)
             return result
 
@@ -229,6 +235,21 @@ class Evaluator:
             raise EvaluationError(f"Unknown function: {fn!r}")
 
         raise EvaluationError(f"Unknown AST node type: {t!r}")
+
+    def _require_decimal_args(self, args: list[Any], op: str) -> list[Decimal]:
+        """Validate that all args are Decimal (not bool, str, or None)."""
+        result: list[Decimal] = []
+        for i, a in enumerate(args):
+            if isinstance(a, bool):
+                raise EvaluationError(
+                    f"{op}: argument {i} is bool; numeric arguments required"
+                )
+            if not isinstance(a, Decimal):
+                raise EvaluationError(
+                    f"{op}: argument {i} is {type(a).__name__!r}; numeric arguments required"
+                )
+            result.append(a)
+        return result
 
     def _record(self, node: str, inputs: dict[str, Any], output: Any) -> None:
         if self.trace:
