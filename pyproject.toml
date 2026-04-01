@@ -47,5 +47,11 @@ src = ["src"]
 select = ["E", "F", "I", "UP"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 strict = true
+
+[[tool.mypy.overrides]]
+# mcp and anthropic are optional extras — stubs not always available
+module = ["mcp", "mcp.*", "anthropic", "anthropic.*"]
+ignore_missing_imports = true
+ignore_errors = true

@@ -45,7 +45,7 @@ def _explain_node(node: dict[str, Any], depth: int = 0) -> str:
         return _fmt(node["value"])
 
     if t == "VAR":
-        return node["name"].replace("_", " ")
+        return str(node["name"]).replace("_", " ")
 
     if t == "ADD":
         a, b = node["args"]

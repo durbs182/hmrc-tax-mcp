@@ -30,7 +30,7 @@ from hmrc_tax_mcp.extractor.nl_extractor import NLExtractor
 from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
 from hmrc_tax_mcp.validation.pipeline import validate_rule as _validate_rule
 
-app = Server("hmrc-tax-mcp") if _MCP_AVAILABLE else None  # type: ignore[assignment]
+app = Server("hmrc-tax-mcp") if _MCP_AVAILABLE else None
 
 
 def _json(data: Any) -> str:
@@ -42,7 +42,7 @@ def _json(data: Any) -> str:
     return json.dumps(data, default=_default, indent=2)
 
 
-@app.list_tools()
+@app.list_tools()  # type: ignore[union-attr, untyped-decorator]
 async def handle_list_tools() -> list[Tool]:
     return [
         Tool(
@@ -200,7 +200,7 @@ async def handle_list_tools() -> list[Tool]:
     ]
 
 
-@app.call_tool()
+@app.call_tool()  # type: ignore[union-attr, untyped-decorator]
 async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     if name == "list_rules":
         rules = list_rules()
@@ -250,7 +250,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
 
     if name == "tax.get_rule_snapshot":
         rules = get_rule_snapshot(arguments["tax_year"], arguments["jurisdiction"])
-        data = {
+        data = {  # type: ignore[assignment]
             "tax_year": arguments["tax_year"],
             "jurisdiction": arguments["jurisdiction"],
             "rules": [r.model_dump(mode="json") for r in rules],
@@ -271,7 +271,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         if rule is None:
             return [TextContent(type="text", text=_json({"error": "Rule not found"}))]
         results = _validate_rule(rule.model_dump())
-        data = {
+        data = {  # type: ignore[assignment]
             "rule_id": rule.rule_id,
             "version": rule.version,
             "stages": [
@@ -306,7 +306,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             output = evaluator.eval(rule.ast)
         except EvaluationError as exc:
             return [TextContent(type="text", text=_json({"error": str(exc)}))]
-        data = {
+        data = {  # type: ignore[assignment]
             "rule_id": rule.rule_id,
             "version": rule.version,
             "inputs": arguments.get("inputs", {}),
@@ -338,19 +338,19 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
 
         # Attempt to compile the DSL and compute checksum
         compile_error: str | None = None
-        checksum: str | None = None
-        ast_node = None
+        draft_checksum: str | None = None
+        draft_ast: dict[str, Any] | None = None
         try:
-            ast_node = _compile_dsl(result.dsl_source)
-            checksum = ast_checksum(ast_node)
+            draft_ast = _compile_dsl(result.dsl_source)
+            draft_checksum = ast_checksum(draft_ast)
         except (CompileError, TokenizeError) as exc:
             compile_error = str(exc)
 
-        data = {
+        data = {  # type: ignore[assignment]
             "draft": result.to_registry_dict(),
             "dsl_source": result.dsl_source,
-            "checksum": checksum,
-            "ast": ast_node,
+            "checksum": draft_checksum,
+            "ast": draft_ast,
             "compile_error": compile_error,
             "warnings": result.warnings,
             "requires_review": result.requires_review,
@@ -367,7 +367,9 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
 
 async def _run() -> None:
     async with stdio_server() as (read_stream, write_stream):
-        await app.run(read_stream, write_stream, app.create_initialization_options())
+        await app.run(  # type: ignore[union-attr]
+            read_stream, write_stream, app.create_initialization_options()  # type: ignore[union-attr]
+        )
 
 
 def main() -> None:

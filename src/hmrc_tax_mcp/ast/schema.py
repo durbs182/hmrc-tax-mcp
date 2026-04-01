@@ -198,7 +198,7 @@ ASTNode = Annotated[
 for _cls in [LetNode, IfNode, AddNode, SubNode, MulNode, DivNode,
              GtNode, LtNode, GteNode, LteNode, EqNode, NeqNode,
              AndNode, OrNode, NotNode, BandApplyNode, TaperNode, CallNode]:
-    _cls.model_rebuild()
+    _cls.model_rebuild()  # type: ignore[attr-defined]
 
 
 def parse_ast(data: dict[str, Any]) -> ASTNode:

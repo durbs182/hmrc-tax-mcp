@@ -90,6 +90,8 @@ def tokenize(text: str) -> list[Token]:
             line_start = m.end()
             continue
 
+        if kind is None:
+            continue
         tokens.append(Token(kind, value, line, col))
 
     return tokens
