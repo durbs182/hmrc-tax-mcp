@@ -13,6 +13,7 @@ import json
 import os
 import textwrap
 from dataclasses import dataclass, field
+from typing import Any
 
 _SYSTEM_PROMPT = textwrap.dedent("""\
     You are an expert UK tax engineer. Your task is to convert HMRC legislative
@@ -69,7 +70,7 @@ class ExtractionResult:
     description: str
     tax_year: str
     jurisdiction: str
-    citations: list[dict]
+    citations: list[dict[str, Any]]
     raw_response: str
     reviewed_by: str | None = None  # Always None until a human signs off
     review_notes: str = ""
@@ -80,7 +81,7 @@ class ExtractionResult:
         """Always True — LLM output must never be published without human review."""
         return self.reviewed_by is None
 
-    def to_registry_dict(self) -> dict:
+    def to_registry_dict(self) -> dict[str, Any]:
         """
         Produce a registry-compatible dict. The caller must compile the DSL
         and compute the checksum before writing to YAML.
@@ -125,9 +126,9 @@ class NLExtractor:
         self.max_tokens = max_tokens
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
 
-    def _client(self):  # type: ignore[return]
+    def _client(self) -> Any:
         try:
-            import anthropic  # type: ignore[import]
+            import anthropic  # noqa: PLC0415
         except ImportError as exc:
             raise ImportError(
                 "The 'anthropic' package is required for NLExtractor. "

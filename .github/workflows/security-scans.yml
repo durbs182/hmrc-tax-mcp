@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
@@ -61,6 +62,8 @@ jobs:
           exit 0
 
       - name: Upload SARIF
+        # upload-sarif requires GitHub Advanced Security (unavailable on private repos without GHAS)
+        continue-on-error: true
         if: ${{ always() && hashFiles('semgrep.sarif') != '' }}
         uses: github/codeql-action/upload-sarif@v4
         with:

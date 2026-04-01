@@ -259,6 +259,12 @@ def _stage_worked_examples(
         )
 
     ast = rule.get("ast")
+    if ast is None:
+        return ValidationResult(
+            stage=ValidationStage.WORKED_EXAMPLES,
+            passed=False,
+            message="Rule has no compiled AST — cannot run worked examples",
+        )
     failures: list[dict[str, Any]] = []
 
     for ex in worked_examples:

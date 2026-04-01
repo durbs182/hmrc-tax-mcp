@@ -132,7 +132,7 @@ class Evaluator:
             a0, a1 = args[0], args[1]
             if isinstance(a1, Decimal) and a1 == 0:
                 raise EvaluationError("Division by zero")
-            result = a0 / a1  # type: ignore[operator]
+            result = a0 / a1  # type: ignore[assignment]
             self._record(t, {"args": args}, result)
             return result
 
@@ -207,7 +207,7 @@ class Evaluator:
                 result = base
             else:
                 excess = value - threshold
-                result = max(base - excess * ratio, Decimal("0"))  # type: ignore[operator]
+                result = max(base - excess * ratio, Decimal("0"))
             self._record(t, {"value": value, "threshold": threshold}, result)
             return result
 
