@@ -37,20 +37,23 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain UK tax strateg
 - [x] `ast-schema` — AST node types (Pydantic), JSON schema, forward-ref rebuild
 - [x] `evaluator` — Decimal-precise evaluator, depth limit, trace, 52 unit tests
 
-### Phase 2 — DSL + Parser + Compiler
-- [ ] `dsl-tokenizer` — Regex tokenizer: IDENT, NUMBER, OP, KEYWORD, PUNCT
-- [ ] `dsl-parser` — Recursive-descent parser implementing EBNF grammar
-- [ ] `dsl-compiler` — Parse tree → canonical AST; unit tests for all node types
+### Phase 2 — DSL + Parser + Compiler ✅
+- [x] `dsl-tokenizer` — Regex tokenizer: IDENT, NUMBER, OP, KEYWORD, PUNCT, NEWLINE
+- [x] `dsl-parser` — Recursive-descent parser: let, return, if/then/else, bands, taper
+- [x] `dsl-compiler` — Parse tree → canonical AST; 50 unit tests
 
-### Phase 3 — Rule Registry & 2025–26 rUK Rule Set
-- [ ] `rule-registry` — Verified YAML store, load/lookup, get_rule_snapshot
-- [ ] `first-ruleset` — Income tax bands, PA taper, CGT, UFPLS, LSA — HMRC citations required
+### Phase 3 — Rule Registry & 2025–26 rUK Rule Set ✅
+- [x] `rule-registry` — YAML store, lazy loading, get_rule(), list_rules(), get_rule_snapshot()
+- [x] `first-ruleset` — 11 rules: income_tax_bands, pa_taper, cgt_exempt, cgt_rates, pension_ufpls_tax_free_fraction, pension_ufpls_taxable_fraction, pension_lsa, state_pension_annual, savings_allowance_basic, savings_allowance_higher, dividend_allowance
 
-### Phase 4 — Validation Pipeline
-- [ ] `validation-pipeline` — 6 stages: syntax → semantic → canonicalisation → execution → worked examples → human review gate
+### Phase 4 — Validation Pipeline ✅
+- [x] `validation-pipeline` — 6 stages: syntax → semantic → canonicalisation → execution → worked examples → human review gate
+- [x] Worked example YAML files for all 11 rUK 2025–26 rules
+- [x] `validate_rule` MCP tool wired into server.py
+- [x] 30 pipeline unit tests; 143 total tests passing
 
 ### Phase 5 — MCP Server (full)
-- [ ] `mcp-server` — All tools wired: list_rules, get_rule, execute_rule, explain_rule, validate_rule, compile_dsl, trace_execution, tax.get_rule_snapshot
+- [ ] `mcp-server` — Remaining tools: explain_rule, trace_execution
 
 ### Phase 6 — NL Extractor
 - [ ] `nl-extractor` — LLM (Anthropic Claude) → DSL with mandatory human review gate
@@ -96,28 +99,32 @@ percent(50000, 20)
 
 | Tool | Status | Purpose |
 |------|--------|---------|
-| `list_rules` | ✅ stub | List all rule IDs and versions |
-| `get_rule` | ✅ stub | DSL, AST, metadata for a rule |
-| `execute_rule` | ✅ working | Run rule with inputs → output + trace |
-| `tax.get_rule_snapshot` | ✅ stub | Full rule set for tax year + jurisdiction |
-| `compile_dsl` | ⏳ Phase 2 | DSL text → AST |
+| `list_rules` | ✅ live | List all rule IDs and versions |
+| `get_rule` | ✅ live | DSL, AST, metadata for a rule |
+| `execute_rule` | ✅ live | Run rule with inputs → output + trace |
+| `tax.get_rule_snapshot` | ✅ live | Full rule set for tax year + jurisdiction |
+| `compile_dsl` | ✅ live | DSL text → AST + SHA-256 checksum |
+| `validate_rule` | ✅ live | Full 6-stage validation pipeline |
 | `explain_rule` | ⏳ Phase 5 | Human-readable rule explanation |
-| `validate_rule` | ⏳ Phase 4 | Full 6-stage validation pipeline |
 | `trace_execution` | ⏳ Phase 5 | Full execution trace for audit |
 
 ---
 
-## 2025–26 rUK Rule Set (Phase 3 target)
+## 2025–26 rUK Rule Set ✅
 
 | Rule ID | Description | HMRC Source |
 |---------|-------------|-------------|
-| `income_tax.bands.2025-26.ruk` | Basic/higher/additional rate bands | https://www.gov.uk/income-tax-rates |
-| `income_tax.pa_taper.2025-26.ruk` | Personal allowance taper (£100k threshold) | https://www.gov.uk/income-tax-rates |
-| `cgt.exempt.2025-26.ruk` | CGT annual exempt amount (£3,000) | https://www.gov.uk/capital-gains-tax/allowances |
-| `cgt.rates.2025-26.ruk` | CGT rates (residential / other) | https://www.gov.uk/capital-gains-tax/rates |
-| `pension.ufpls.2025-26` | UFPLS 25% tax-free / 75% taxable | https://www.gov.uk/tax-on-pension |
-| `pension.lsa.2025-26` | Lump Sum Allowance £268,275 | https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates |
-| `income_tax.state_pension.2025-26` | New State Pension full rate | https://www.gov.uk/new-state-pension/what-youll-get |
+| `income_tax_bands` | Basic/higher/additional rate bands + nil band | [Income tax rates](https://www.gov.uk/income-tax-rates) |
+| `pa_taper` | Personal allowance taper (£100k threshold, £12,570 base) | [Income tax rates](https://www.gov.uk/income-tax-rates) |
+| `cgt_exempt` | CGT annual exempt amount (£3,000) | [CGT allowances](https://www.gov.uk/capital-gains-tax/allowances) |
+| `cgt_rates` | CGT rates: 24% higher, 18% basic | [CGT rates](https://www.gov.uk/capital-gains-tax/rates) |
+| `pension_ufpls_tax_free_fraction` | UFPLS tax-free fraction (0.25) | [Tax on pension](https://www.gov.uk/tax-on-pension) |
+| `pension_ufpls_taxable_fraction` | UFPLS taxable fraction (0.75) | [Tax on pension](https://www.gov.uk/tax-on-pension) |
+| `pension_lsa` | Lump Sum Allowance £268,275 | [Pension scheme rates](https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates) |
+| `state_pension_annual` | Full new state pension £11,502.40/year | [New State Pension](https://www.gov.uk/new-state-pension) |
+| `savings_allowance_basic` | PSA basic rate £1,000 | [Tax on savings](https://www.gov.uk/apply-tax-free-interest-on-savings) |
+| `savings_allowance_higher` | PSA higher rate £500 | [Tax on savings](https://www.gov.uk/apply-tax-free-interest-on-savings) |
+| `dividend_allowance` | Dividend allowance £500 | [Tax on dividends](https://www.gov.uk/tax-on-dividends) |
 
 ---
 

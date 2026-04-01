@@ -7,45 +7,97 @@ A deterministic, auditable HMRC UK tax rule engine exposed via the [Model Contex
 AI agents (Claude, Copilot, Codex) should orchestrate and explain tax strategies — not compute them. This server provides the deterministic calculation layer:
 
 - **LLMs call tools** → this server computes → LLMs explain results
-- All rules are versioned, hashed, and cited against HMRC sources
+- All rules are versioned, SHA-256 hashed, and cited against HMRC sources
 - All arithmetic uses `decimal.Decimal` (no floating-point tax errors)
 - Rules are immutable once published; updates create new versions
 
 ## Architecture
 
-| Layer | Purpose |
-|-------|---------|
-| AST | Canonical, sandboxed representation of tax rules |
-| DSL | Human-writable language that compiles to AST |
-| Evaluator | Safe, `Decimal`-precise AST execution engine |
-| Rule Registry | Versioned, hashed, citable rule store |
-| Validation Pipeline | 6-stage pipeline incl. HMRC worked examples |
-| MCP Server | Stateless tool layer for AI agents (stdio transport) |
+| Layer | Module | Purpose |
+|-------|--------|---------|
+| AST | `ast/schema.py`, `ast/canonical.py` | Canonical, sandboxed rule representation + SHA-256 hashing |
+| Evaluator | `evaluator.py` | Safe, Decimal-precise AST execution engine |
+| DSL | `dsl/tokenizer.py`, `dsl/parser.py`, `dsl/compiler.py` | Human-writable rule language → AST |
+| Rule Registry | `registry/model.py`, `registry/store.py`, `registry/rules/` | Versioned, hashed, citable YAML rule store |
+| Validation Pipeline | `validation/pipeline.py` | 6-stage pipeline incl. HMRC worked examples |
+| MCP Server | `server.py` | Stateless tool layer for AI agents (stdio transport) |
+| NL Extractor | `extractor/nl_extractor.py` | LLM-assisted HMRC prose → DSL *(coming in Phase 6)* |
 
 ## Quick Start
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest
-hmrc-tax-mcp          # starts MCP server on stdio
+pytest                # 143 tests
+hmrc-tax-mcp          # starts MCP server on stdio (requires Python ≥3.10 + pip install -e ".[server]")
 ```
 
 ## MCP Tools
 
-| Tool | Purpose |
-|------|---------|
-| `list_rules` | List all rule IDs and versions |
-| `get_rule` | Get DSL, AST, metadata for a rule |
-| `execute_rule` | Run a rule with inputs → output + optional trace |
-| `tax.get_rule_snapshot` | Full rule set for a tax year + jurisdiction |
-| `compile_dsl` | Compile DSL text → AST *(coming in Phase 2)* |
+| Tool | Status | Purpose |
+|------|--------|---------|
+| `list_rules` | ✅ live | List all rule IDs and versions |
+| `get_rule` | ✅ live | Get DSL, AST, metadata for a rule |
+| `execute_rule` | ✅ live | Run a rule with inputs → output + optional trace |
+| `tax.get_rule_snapshot` | ✅ live | Full rule set for a tax year + jurisdiction |
+| `compile_dsl` | ✅ live | Compile DSL text → AST + SHA-256 checksum |
+| `validate_rule` | ✅ live | Run the 6-stage validation pipeline on a rule |
+| `explain_rule` | ⏳ Phase 5 | Human-readable rule explanation |
+| `trace_execution` | ⏳ Phase 5 | Structured execution trace for audit |
 
 ## Tax Years Covered
 
 | Year | Jurisdiction | Rules |
 |------|-------------|-------|
-| 2025–26 | rUK | Income tax bands, personal allowance taper, CGT, UFPLS, pension LSA *(coming in Phase 3)* |
+| 2025–26 | rUK | 11 rules: income tax bands, PA taper, CGT, UFPLS fractions, pension LSA, state pension, savings allowances, dividend allowance |
+| 2025–26 | Scotland | *(coming in Phase 7)* |
+
+## DSL Quick Reference
+
+```
+# Bands (compiles to BAND_APPLY)
+bands taxable_income:
+  0      to 12570  at 0%
+  12570  to 50270  at 20%
+  50270  to 125140 at 40%
+  125140+          at 45%
+
+# Taper (compiles to TAPER)
+taper adjusted_net_income:
+  threshold 100000
+  ratio 1 per 2
+  base 12570
+
+# Let bindings + conditional
+let threshold = 100000
+return if income > threshold then 40 else 20
+```
+
+## Validation Pipeline
+
+Every rule passes 6 stages before publication:
+
+| Stage | Check |
+|-------|-------|
+| 1 Syntax | DSL compiles without error |
+| 2 Semantic | Required fields, valid provenance, ≥1 HMRC citation |
+| 3 Canonicalisation | SHA-256 of recompiled DSL matches stored checksum |
+| 4 Execution | Rule evaluates without error on smoke-test inputs |
+| 5 Worked examples | Outputs match HMRC-published test cases |
+| 6 Human review | `reviewed_by` must be set before publication |
+
+## Build Progress
+
+| Phase | Deliverable | Status |
+|-------|------------|--------|
+| 1 | Repo scaffold, AST schema, Evaluator | ✅ done |
+| 2 | DSL tokenizer → parser → compiler | ✅ done |
+| 3 | 2025–26 rUK rule set (11 rules) | ✅ done |
+| 4 | 6-stage validation pipeline | ✅ done |
+| 5 | MCP server remaining tools (explain_rule, trace_execution) | ⏳ next |
+| 6 | NL extractor (LLM-assisted, human-reviewed) | ⏳ |
+| 7 | Scottish income tax jurisdiction | ⏳ |
+| 8 | Integration guide for later-life-planner | ⏳ |
 
 ## Design Principles
 
@@ -54,25 +106,18 @@ hmrc-tax-mcp          # starts MCP server on stdio
 - **SHA-256 rule hashing** — canonical JSON for legal reproducibility
 - **Human review gate** — required before any rule is published
 - **HMRC citations** — every rule entry must reference source URLs
+- **MCP transport** — stdio (local); HTTP SSE can be added later
 
 ## HMRC Source References
 
-- [Income tax rates](https://www.gov.uk/income-tax-rates)
+- [Income tax rates and allowances](https://www.gov.uk/income-tax-rates)
+- [Capital Gains Tax rates and allowances](https://www.gov.uk/capital-gains-tax/allowances)
 - [Scottish income tax](https://www.gov.uk/scottish-income-tax)
-- [Tax on pensions](https://www.gov.uk/tax-on-pension)
-- [Pension scheme rates and allowances](https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates)
-
-## Build Sequence
-
-| Phase | Deliverable |
-|-------|------------|
-| ✅ 1 | Repo scaffold, AST schema, Evaluator, Registry model, MCP server stub |
-| 2 | DSL tokenizer → parser → compiler |
-| 3 | 2025–26 rUK rule set (income tax, CGT, PA taper, UFPLS, LSA) |
-| 4 | Full validation pipeline (6 stages + worked examples) |
-| 5 | NL extractor (LLM-assisted, human-reviewed) |
-| 6 | Scottish income tax jurisdiction |
-| 7 | Integration with later-life-planner |
+- [Tax on pensions (UFPLS)](https://www.gov.uk/tax-on-pension)
+- [Pension scheme rates](https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates)
+- [New State Pension](https://www.gov.uk/new-state-pension)
+- [Tax on dividends](https://www.gov.uk/tax-on-dividends)
+- [Tax on savings interest](https://www.gov.uk/apply-tax-free-interest-on-savings)
 
 ## Licence
 
