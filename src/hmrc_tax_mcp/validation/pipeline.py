@@ -51,9 +51,9 @@ def _is_literal_two(arg: Any) -> bool:
         except Exception:
             return False
 
-    # Handle common AST literal encodings, e.g. {"node": "NUMBER", "value": "2.00"}.
+    # Handle common AST literal encodings, e.g. {"node": "CONST", "value": 2}.
     if isinstance(arg, dict):
-        if arg.get("node") in {"INT", "NUMBER", "DECIMAL", "LITERAL"}:
+        if arg.get("node") in {"CONST", "INT", "NUMBER", "DECIMAL", "LITERAL"}:
             value = arg.get("value")
             if isinstance(value, (int, float, Decimal)):
                 try:
