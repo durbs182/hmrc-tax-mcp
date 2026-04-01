@@ -86,10 +86,13 @@ class Evaluator:
             return var_result
 
         if t == "LET":
-            new_scope = dict(self.vars)
+            # Evaluate bindings sequentially so each can reference earlier ones.
+            accumulated = dict(self.vars)
             for k, v in node["bindings"].items():
-                new_scope[k] = self.eval(v, depth + 1)
-            inner = Evaluator(new_scope, self.max_depth, self.trace)
+                binding_eval = Evaluator(accumulated, self.max_depth, self.trace)
+                accumulated[k] = binding_eval.eval(v, depth + 1)
+                self.trace_steps.extend(binding_eval.trace_steps)
+            inner = Evaluator(accumulated, self.max_depth, self.trace)
             result = inner.eval(node["body"], depth + 1)
             self.trace_steps.extend(inner.trace_steps)
             self._record(t, {"bindings": list(node["bindings"].keys())}, result)
