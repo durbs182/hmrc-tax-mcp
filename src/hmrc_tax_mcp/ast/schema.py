@@ -38,7 +38,9 @@ class VarNode(BaseModel):
 
 class LetNode(BaseModel):
     node: Literal["LET"]
-    bindings: dict[str, ASTNode]
+    # Ordered list of (name, expr) pairs so evaluation order is explicit in the schema.
+    # Use a list instead of a dict so tooling can't silently reorder bindings.
+    bindings: list[tuple[str, ASTNode]]
     body: ASTNode
     metadata: dict[str, Any] | None = None
 

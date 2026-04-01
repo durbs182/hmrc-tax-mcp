@@ -87,15 +87,16 @@ class Evaluator:
 
         if t == "LET":
             # Evaluate bindings sequentially so each can reference earlier ones.
+            # Bindings are an ordered list of [name, expr] pairs.
             accumulated = dict(self.vars)
-            for k, v in node["bindings"].items():
+            for k, v in node["bindings"]:
                 binding_eval = Evaluator(accumulated, self.max_depth, self.trace)
                 accumulated[k] = binding_eval.eval(v, depth + 1)
                 self.trace_steps.extend(binding_eval.trace_steps)
             inner = Evaluator(accumulated, self.max_depth, self.trace)
             result = inner.eval(node["body"], depth + 1)
             self.trace_steps.extend(inner.trace_steps)
-            self._record(t, {"bindings": list(node["bindings"].keys())}, result)
+            self._record(t, {"bindings": [pair[0] for pair in node["bindings"]]}, result)
             return result
 
         if t == "IF":

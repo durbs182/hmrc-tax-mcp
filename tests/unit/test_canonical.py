@@ -85,7 +85,7 @@ class TestLetBindingOrder:
     def _let_ast(self, order: list[str]) -> dict:
         return {
             "node": "LET",
-            "bindings": {name: {"node": "CONST", "value": i} for i, name in enumerate(order)},
+            "bindings": [[name, {"node": "CONST", "value": i}] for i, name in enumerate(order)],
             "body": {"node": "VAR", "name": order[-1]},
         }
 
@@ -102,12 +102,12 @@ class TestLetBindingOrder:
         ast2 = self._let_ast(["x", "y", "z"])
         assert ast_checksum(ast1) == ast_checksum(ast2)
 
-    def test_bindings_serialised_as_ordered_list(self) -> None:
+    def test_bindings_are_ordered_list(self) -> None:
         from hmrc_tax_mcp.ast.canonical import canonicalise
         import json
         ast = self._let_ast(["a", "b"])
         canonical = json.loads(canonicalise(ast))
-        # bindings must be a list (not a dict) in canonical form
+        # bindings are already a list in the schema; canonical preserves order
         assert isinstance(canonical["bindings"], list)
         assert canonical["bindings"][0][0] == "a"
         assert canonical["bindings"][1][0] == "b"

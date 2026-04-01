@@ -140,7 +140,7 @@ class TestLet:
     def test_let_binding(self) -> None:
         result = ev({
             "node": "LET",
-            "bindings": {"pa": {"node": "CONST", "value": 12570}},
+            "bindings": [["pa", {"node": "CONST", "value": 12570}]],
             "body": {"node": "VAR", "name": "pa"},
         })
         assert result == Decimal("12570")
@@ -326,13 +326,13 @@ class TestLetSequential:
         # let x = 10, y = x + 5 in y  →  15
         ast = {
             "node": "LET",
-            "bindings": {
-                "x": {"node": "CONST", "value": 10},
-                "y": {"node": "ADD", "args": [
+            "bindings": [
+                ["x", {"node": "CONST", "value": 10}],
+                ["y", {"node": "ADD", "args": [
                     {"node": "VAR", "name": "x"},
                     {"node": "CONST", "value": 5},
-                ]},
-            },
+                ]}],
+            ],
             "body": {"node": "VAR", "name": "y"},
         }
         assert ev(ast) == Decimal("15")
@@ -341,17 +341,17 @@ class TestLetSequential:
         # let a=1, b=a+1, c=b+1 in c  →  3
         ast = {
             "node": "LET",
-            "bindings": {
-                "a": {"node": "CONST", "value": 1},
-                "b": {"node": "ADD", "args": [
+            "bindings": [
+                ["a", {"node": "CONST", "value": 1}],
+                ["b", {"node": "ADD", "args": [
                     {"node": "VAR", "name": "a"},
                     {"node": "CONST", "value": 1},
-                ]},
-                "c": {"node": "ADD", "args": [
+                ]}],
+                ["c", {"node": "ADD", "args": [
                     {"node": "VAR", "name": "b"},
                     {"node": "CONST", "value": 1},
-                ]},
-            },
+                ]}],
+            ],
             "body": {"node": "VAR", "name": "c"},
         }
         assert ev(ast) == Decimal("3")
@@ -361,7 +361,7 @@ class TestLetSequential:
         evaluator = Evaluator(variables={})
         evaluator.eval({
             "node": "LET",
-            "bindings": {"inner": {"node": "CONST", "value": 99}},
+            "bindings": [["inner", {"node": "CONST", "value": 99}]],
             "body": {"node": "VAR", "name": "inner"},
         })
         with pytest.raises(EvaluationError, match="Unknown variable"):

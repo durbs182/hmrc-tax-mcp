@@ -14,7 +14,7 @@ Multi-statement programs compile to a nested LET node:
   let b = 2
   return a + b
 
-→ {"node": "LET", "bindings": {"a": CONST(1), "b": CONST(2)}, "body": ADD(VAR(a), VAR(b))}
+→ {"node": "LET", "bindings": [["a", CONST(1)], ["b", CONST(2)]], "body": ADD(VAR(a), VAR(b))}
 """
 
 from __future__ import annotations
@@ -72,16 +72,19 @@ def compile_dsl(dsl_text: str) -> dict[str, Any]:
         raise CompileError("DSL source is empty")
 
     # Separate let bindings from the final expression/return
-    bindings: dict[str, Any] = {}
+    # Use a list of (name, expr) pairs to preserve declaration order.
+    bindings: list[tuple[str, Any]] = []
+    bound_names: set[str] = set()
     body: dict[str, Any] | None = None
 
     for stmt in stmts:
         kind = stmt["stmt"]
         if kind == "let":
             name = stmt["name"]
-            if name in bindings:
+            if name in bound_names:
                 raise CompileError(f"Duplicate let binding: {name!r}")
-            bindings[name] = _compile_expr(stmt["expr"])
+            bindings.append((name, _compile_expr(stmt["expr"])))
+            bound_names.add(name)
         elif kind == "return":
             if body is not None:
                 raise CompileError("Multiple return statements are not allowed")
@@ -160,7 +163,7 @@ def _compile_expr(expr: dict[str, Any]) -> dict[str, Any]:
     if node == "LET":
         return {
             "node": "LET",
-            "bindings": {k: _compile_expr(v) for k, v in expr["bindings"].items()},
+            "bindings": [[k, _compile_expr(v)] for k, v in expr["bindings"]],
             "body": _compile_expr(expr["body"]),
         }
 
