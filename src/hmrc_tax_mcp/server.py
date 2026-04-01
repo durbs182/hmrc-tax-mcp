@@ -21,6 +21,7 @@ except ImportError:
     _MCP_AVAILABLE = False
 
 from hmrc_tax_mcp.ast.canonical import ast_checksum
+from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl as _compile_dsl
 from hmrc_tax_mcp.evaluator import Evaluator, EvaluationError
 from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
 
@@ -94,7 +95,7 @@ async def handle_list_tools() -> list[Tool]:
         ),
         Tool(
             name="compile_dsl",
-            description="Compile DSL text to a canonical AST. (Not yet implemented.)",
+            description="Compile DSL text to a canonical AST, returning the AST and its SHA-256 checksum.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -164,7 +165,13 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         return [TextContent(type="text", text=_json(data))]
 
     if name == "compile_dsl":
-        return [TextContent(type="text", text=_json({"error": "DSL compiler not yet implemented"}))]
+        dsl_src = arguments.get("dsl", "")
+        try:
+            ast_node = _compile_dsl(dsl_src)
+            checksum = ast_checksum(ast_node)
+            return [TextContent(type="text", text=_json({"ast": ast_node, "checksum": checksum}))]
+        except CompileError as exc:
+            return [TextContent(type="text", text=_json({"error": str(exc)}))]
 
     return [TextContent(type="text", text=_json({"error": f"Unknown tool: {name!r}"}))]
 

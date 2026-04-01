@@ -1,0 +1,24 @@
+rule_id: state_pension_annual
+version: "1.0.0"
+tax_year: "2025-26"
+jurisdiction: rUK
+title: Full New State Pension (Annual, rUK 2025-26)
+description: >
+  The full new State Pension for 2025-26 is £221.20 per week (after the
+  4.1% triple-lock increase applied from April 2025), equating to £11,502.40
+  per year (52 weeks). Returns the annual amount. Individuals with incomplete
+  NI records receive a proportional amount.
+dsl_source: |
+  return 11502.40
+ast:
+  node: CONST
+  value: 11502.4
+checksum: "ed0217a68b9618642c837fb127c2337211447ceb1d182f661bc302f972c9d32d"
+citations:
+  - label: "GOV.UK – New State Pension rates 2025-26"
+    url: "https://www.gov.uk/new-state-pension"
+  - label: "DWP – Benefit and pension rates 2025-26"
+    url: "https://www.gov.uk/government/publications/benefit-and-pension-rates-2025-to-2026"
+provenance: manual
+published_at: "2025-04-06T00:00:00Z"
+reviewed_by: null

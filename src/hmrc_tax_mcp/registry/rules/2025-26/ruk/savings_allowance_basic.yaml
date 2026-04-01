@@ -1,0 +1,24 @@
+rule_id: savings_allowance_basic
+version: "1.0.0"
+tax_year: "2025-26"
+jurisdiction: rUK
+title: Personal Savings Allowance – Basic Rate (rUK 2025-26)
+description: >
+  Basic-rate taxpayers can earn up to £1,000 of savings interest tax-free
+  per year under the Personal Savings Allowance (PSA). Higher-rate taxpayers
+  get £500; additional-rate taxpayers get nil. This rule returns the PSA for
+  basic-rate taxpayers.
+dsl_source: |
+  return 1000
+ast:
+  node: CONST
+  value: 1000
+checksum: "6edc553fb96c72c3960906c447e9ab293e57e636b1de465103637755f8632df1"
+citations:
+  - label: "HMRC – Tax on savings interest"
+    url: "https://www.gov.uk/apply-tax-free-interest-on-savings"
+  - label: "HMRC – Savings rates and allowances 2025-26"
+    url: "https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past"
+provenance: manual
+published_at: "2025-04-06T00:00:00Z"
+reviewed_by: null

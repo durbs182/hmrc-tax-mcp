@@ -65,7 +65,11 @@ class Evaluator:
         # Primitive nodes
         # ------------------------------------------------------------------
         if t == "CONST":
-            result: Decimal | bool = Decimal(str(node["value"]))
+            val = node["value"]
+            if isinstance(val, bool):
+                result: Decimal | bool = val
+            else:
+                result = Decimal(str(val))
             self._record(t, {}, result)
             return result
 
@@ -73,9 +77,13 @@ class Evaluator:
             name = node["name"]
             if name not in self.vars:
                 raise EvaluationError(f"Unknown variable: {name!r}")
-            result = Decimal(str(self.vars[name]))
-            self._record(t, {"name": name}, result)
-            return result
+            raw = self.vars[name]
+            if isinstance(raw, bool):
+                var_result: Decimal | bool = raw
+            else:
+                var_result = Decimal(str(raw))
+            self._record(t, {"name": name}, var_result)
+            return var_result
 
         if t == "LET":
             new_scope = dict(self.vars)

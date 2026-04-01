@@ -1,0 +1,23 @@
+rule_id: cgt_exempt
+version: "1.0.0"
+tax_year: "2025-26"
+jurisdiction: rUK
+title: Capital Gains Tax Annual Exempt Amount (rUK 2025-26)
+description: >
+  The annual exempt amount for Capital Gains Tax in 2025-26 is £3,000.
+  Gains up to this amount are exempt from CGT. This rule returns the
+  exempt amount as a constant.
+dsl_source: |
+  return 3000
+ast:
+  node: CONST
+  value: 3000
+checksum: "a8c6f62735d3589c82ca38eba8a3406d7b4393aa43ce6666dde686269d4616ab"
+citations:
+  - label: "HMRC – Capital Gains Tax rates and allowances"
+    url: "https://www.gov.uk/capital-gains-tax/allowances"
+  - label: "HMRC – Rates and allowances: Capital Gains Tax"
+    url: "https://www.gov.uk/government/publications/rates-and-allowances-capital-gains-tax/capital-gains-tax-rates-and-annual-tax-on-enveloped-dwellings"
+provenance: manual
+published_at: "2025-04-06T00:00:00Z"
+reviewed_by: null
