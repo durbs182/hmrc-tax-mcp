@@ -150,16 +150,16 @@ class Evaluator:
         # Comparisons
         # ------------------------------------------------------------------
         if t in {"GT", "LT", "GTE", "LTE", "EQ", "NEQ"}:
-            a, b = self.eval(node["args"][0], depth + 1), self.eval(node["args"][1], depth + 1)
-            bool_result: bool = {
+            lhs, rhs = self.eval(node["args"][0], depth + 1), self.eval(node["args"][1], depth + 1)
+            bool_result: Decimal | bool = {
                 "GT": lambda x, y: x > y,
                 "LT": lambda x, y: x < y,
                 "GTE": lambda x, y: x >= y,
                 "LTE": lambda x, y: x <= y,
                 "EQ": lambda x, y: x == y,
                 "NEQ": lambda x, y: x != y,
-            }[t](a, b)
-            self._record(t, {"a": a, "b": b}, bool_result)
+            }[t](lhs, rhs)
+            self._record(t, {"a": lhs, "b": rhs}, bool_result)
             return bool_result
 
         # ------------------------------------------------------------------

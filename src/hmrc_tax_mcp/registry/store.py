@@ -89,11 +89,11 @@ def get_rule(
 
     # Check for jurisdiction ambiguity before selecting latest version.
     if jurisdiction is None:
-        jurisdictions = {e.jurisdiction for e in matches}
-        if len(jurisdictions) > 1:
+        ambig_jurisdictions = {e.jurisdiction for e in matches}
+        if len(ambig_jurisdictions) > 1:
             raise ValueError(
                 f"Rule {rule_id!r} exists in multiple jurisdictions "
-                f"{sorted(jurisdictions)}; pass jurisdiction= to disambiguate"
+                f"{sorted(ambig_jurisdictions)}; pass jurisdiction= to disambiguate"
             )
 
     return sorted(matches, key=lambda e: _semver_key(e.version))[-1]
