@@ -24,6 +24,7 @@ from hmrc_tax_mcp.ast.canonical import ast_checksum
 from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl as _compile_dsl
 from hmrc_tax_mcp.dsl.tokenizer import TokenizeError
 from hmrc_tax_mcp.evaluator import Evaluator, EvaluationError
+from hmrc_tax_mcp.explainer import explain_rule as _explain_rule
 from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
 from hmrc_tax_mcp.validation.pipeline import validate_rule as _validate_rule
 
@@ -125,6 +126,42 @@ async def handle_list_tools() -> list[Tool]:
                 "required": ["rule_id"],
             },
         ),
+        Tool(
+            name="explain_rule",
+            description=(
+                "Return a structured, human-readable explanation of a tax rule: "
+                "what it computes, what input variables it needs, HMRC citations, "
+                "and the authoritative DSL source text."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "rule_id": {"type": "string", "description": "Rule ID (e.g. 'income_tax_bands')"},
+                    "version": {"type": "string", "default": "latest"},
+                },
+                "required": ["rule_id"],
+            },
+        ),
+        Tool(
+            name="trace_execution",
+            description=(
+                "Execute a tax rule and return a full step-by-step audit trace showing "
+                "every node evaluated, its inputs, and its output. Useful for explaining "
+                "how a specific result was reached."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "rule_id": {"type": "string"},
+                    "version": {"type": "string", "default": "latest"},
+                    "inputs": {
+                        "type": "object",
+                        "description": "Variable bindings, e.g. {'taxable_income': 50000}",
+                    },
+                },
+                "required": ["rule_id", "inputs"],
+            },
+        ),
     ]
 
 
@@ -212,6 +249,44 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 for r in results
             ],
             "overall": all(r.passed for r in results),
+        }
+        return [TextContent(type="text", text=_json(data))]
+
+    if name == "explain_rule":
+        rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"))
+        if rule is None:
+            return [TextContent(type="text", text=_json({"error": "Rule not found"}))]
+        explanation = _explain_rule(rule.model_dump(mode="json"))
+        return [TextContent(type="text", text=_json(explanation))]
+
+    if name == "trace_execution":
+        rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"))
+        if rule is None:
+            return [TextContent(type="text", text=_json({"error": "Rule not found"}))]
+        evaluator = Evaluator(
+            variables=arguments.get("inputs", {}),
+            trace=True,
+        )
+        try:
+            output = evaluator.eval(rule.ast)
+        except EvaluationError as exc:
+            return [TextContent(type="text", text=_json({"error": str(exc)}))]
+        data = {
+            "rule_id": rule.rule_id,
+            "version": rule.version,
+            "inputs": arguments.get("inputs", {}),
+            "output": output,
+            "checksum": rule.checksum,
+            "steps": len(evaluator.trace_steps),
+            "trace": [
+                {
+                    "step": i + 1,
+                    "node": s.node,
+                    "inputs": s.inputs,
+                    "output": s.output,
+                }
+                for i, s in enumerate(evaluator.trace_steps)
+            ],
         }
         return [TextContent(type="text", text=_json(data))]
 

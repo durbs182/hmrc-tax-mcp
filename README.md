@@ -28,7 +28,7 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain tax strategies
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                # 143 tests
+pytest                # 189 tests
 hmrc-tax-mcp          # starts MCP server on stdio (requires Python ≥3.10 + pip install -e ".[server]")
 ```
 
@@ -42,8 +42,8 @@ hmrc-tax-mcp          # starts MCP server on stdio (requires Python ≥3.10 + pi
 | `tax.get_rule_snapshot` | ✅ live | Full rule set for a tax year + jurisdiction |
 | `compile_dsl` | ✅ live | Compile DSL text → AST + SHA-256 checksum |
 | `validate_rule` | ✅ live | Run the 6-stage validation pipeline on a rule |
-| `explain_rule` | ⏳ Phase 5 | Human-readable rule explanation |
-| `trace_execution` | ⏳ Phase 5 | Structured execution trace for audit |
+| `explain_rule` | ✅ Phase 5 | Human-readable rule explanation |
+| `trace_execution` | ✅ Phase 5 | Structured execution trace for audit |
 
 ## Tax Years Covered
 
@@ -94,7 +94,7 @@ Every rule passes 6 stages before publication:
 | 2 | DSL tokenizer → parser → compiler | ✅ done |
 | 3 | 2025–26 rUK rule set (11 rules) | ✅ done |
 | 4 | 6-stage validation pipeline | ✅ done |
-| 5 | MCP server remaining tools (explain_rule, trace_execution) | ⏳ next |
+| 5 | MCP server remaining tools (explain_rule, trace_execution) | ✅ done |
 | 6 | NL extractor (LLM-assisted, human-reviewed) | ⏳ |
 | 7 | Scottish income tax jurisdiction | ⏳ |
 | 8 | Integration guide for later-life-planner | ⏳ |

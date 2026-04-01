@@ -52,8 +52,11 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain UK tax strateg
 - [x] `validate_rule` MCP tool wired into server.py
 - [x] 30 pipeline unit tests; 143 total tests passing
 
-### Phase 5 — MCP Server (full)
-- [ ] `mcp-server` — Remaining tools: explain_rule, trace_execution
+### Phase 5 — MCP Server (full) ✅
+- [x] `mcp-server` — `explain_rule` tool: AST walker → human-readable prose + variable list + citations
+- [x] `mcp-server` — `trace_execution` tool: full step-by-step audit trace with node-level inputs/outputs
+- [x] `explainer.py` — deterministic AST → prose; comma-formatted numbers; coverage for CONST, BAND_APPLY, TAPER, IF, arithmetic nodes
+- [x] 46 new tests (test_explainer.py + test_mcp_tools.py); **189 total tests passing**
 
 ### Phase 6 — NL Extractor
 - [ ] `nl-extractor` — LLM (Anthropic Claude) → DSL with mandatory human review gate
