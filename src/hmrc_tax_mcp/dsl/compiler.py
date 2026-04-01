@@ -9,7 +9,7 @@ The compiler handles two forms:
   - Single-expression DSL (a bare expr with no let/return)
   - Multi-statement DSL with let bindings and a final return
 
-Multi-statement programs compile to a nested LET node:
+Multi-statement programs compile to a single LET node with an ordered bindings list:
   let a = 1
   let b = 2
   return a + b
@@ -36,7 +36,13 @@ def _validate_bands(bands: list[dict[str, Any]]) -> None:
     from decimal import Decimal as _D
 
     prev_upper: _D | None = None
+    open_ended_seen = False
     for i, band in enumerate(bands):
+        if open_ended_seen:
+            raise CompileError(
+                f"Band {i}: a band cannot follow an open-ended band (upper=null); "
+                "the open-ended band must be the last entry"
+            )
         lower = _D(str(band["lower"]))
         upper = _D(str(band["upper"])) if band.get("upper") is not None else None
         if upper is not None and upper <= lower:
@@ -48,6 +54,8 @@ def _validate_bands(bands: list[dict[str, Any]]) -> None:
                 f"Band {i}: lower ({lower}) must equal the prior band's upper ({prev_upper}); "
                 "bands must be contiguous and non-overlapping"
             )
+        if upper is None:
+            open_ended_seen = True
         prev_upper = upper
 
 

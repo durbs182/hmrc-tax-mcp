@@ -248,3 +248,15 @@ bands income:
 """
         with pytest.raises(CompileError, match="greater than lower"):
             compile_dsl(dsl)
+
+    def test_band_after_open_ended_rejected(self) -> None:
+        """A band following an open-ended (upper=null) band must be rejected."""
+        from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl
+        dsl = """\
+bands income:
+  0 to 50000 at 20%
+  50000+ at 40%
+  100000 to 150000 at 45%
+"""
+        with pytest.raises(CompileError, match="cannot follow an open-ended band"):
+            compile_dsl(dsl)
