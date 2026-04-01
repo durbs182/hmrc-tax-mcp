@@ -129,14 +129,21 @@ def _compile_expr(expr: dict[str, Any]) -> dict[str, Any]:
 
     # CALL
     if node == "CALL":
-        _allowed_fns = {"percent", "round"}
-        if expr["name"] not in _allowed_fns:
+        _fn_arities: dict[str, int] = {"percent": 2, "round": 2}
+        fn_name = expr["name"]
+        if fn_name not in _fn_arities:
             raise CompileError(
-                f"Unknown function {expr['name']!r}. Allowed: {sorted(_allowed_fns)}"
+                f"Unknown function {fn_name!r}. Allowed: {sorted(_fn_arities)}"
+            )
+        expected_arity = _fn_arities[fn_name]
+        actual_arity = len(expr["args"])
+        if actual_arity != expected_arity:
+            raise CompileError(
+                f"{fn_name}() requires exactly {expected_arity} argument(s), got {actual_arity}"
             )
         return {
             "node": "CALL",
-            "name": expr["name"],
+            "name": fn_name,
             "args": [_compile_expr(a) for a in expr["args"]],
         }
 
