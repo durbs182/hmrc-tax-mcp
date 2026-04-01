@@ -6,6 +6,9 @@ useDefault = true
 [[rules]]
 id = "hardcoded-db-uri"
 description = "Hardcoded database URI with embedded credentials"
+# Single backslashes are intentional: TOML literal strings ('''...''') pass backslashes
+# verbatim to the regex engine, so \b and \s are the correct word-boundary / whitespace
+# metacharacters. No double-escaping is needed here.
 regex = '''(?i)\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[A-Za-z0-9._%+-]{1,80}:[^@\s'"]{6,200}@[^'"\s]+'''
 secretGroup = 0
 keywords = ["postgres://", "postgresql://", "mysql://", "mongodb://", "mongodb+srv://", "redis://"]
