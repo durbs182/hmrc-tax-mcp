@@ -42,6 +42,59 @@ _REQUIRED_FIELDS = {
 _VALID_PROVENANCES = {"manual", "nl_extracted", "migrated"}
 
 
+def _is_literal_two(arg: Any) -> bool:
+    """Return True if the AST node or value represents the numeric literal 2."""
+    # Handle plain Python numeric values directly.
+    if isinstance(arg, (int, float, Decimal)):
+        try:
+            return Decimal(str(arg)) == Decimal("2")
+        except Exception:
+            return False
+
+    # Handle common AST literal encodings, e.g. {"node": "CONST", "value": 2}.
+    if isinstance(arg, dict):
+        if arg.get("node") in {"CONST", "INT", "NUMBER", "DECIMAL", "LITERAL"}:
+            value = arg.get("value")
+            if isinstance(value, (int, float, Decimal)):
+                try:
+                    return Decimal(str(value)) == Decimal("2")
+                except Exception:
+                    return False
+            if isinstance(value, str):
+                try:
+                    return Decimal(value) == Decimal("2")
+                except Exception:
+                    return False
+
+    return False
+
+
+def _final_result_is_rounded(ast: Any) -> bool:
+    """Return True if the effective result of the AST is wrapped in round(expr, 2).
+
+    Traverses LET bodies and IF branches so that wrapping patterns like
+    ``let x = … in round(x, 2)`` are recognised. For IF nodes, both branches
+    must be rounded to two decimal places.
+    """
+    if not isinstance(ast, dict):
+        return False
+    node = ast.get("node")
+    if node == "CALL" and ast.get("name") == "round":
+        # Enforce round(expr, 2): exactly two arguments and second is literal 2.
+        args = ast.get("args") or ast.get("arguments")
+        if isinstance(args, list) and len(args) == 2 and _is_literal_two(args[1]):
+            return True
+        return False
+    if node == "LET":
+        return _final_result_is_rounded(ast.get("body"))
+    if node == "IF":
+        return (
+            _final_result_is_rounded(ast.get("then"))
+            and _final_result_is_rounded(ast.get("else") or ast.get("else_"))
+        )
+    return False
+
+
 class ValidationStage(str, Enum):
     SYNTAX = "syntax"
     SEMANTIC = "semantic"
@@ -153,6 +206,19 @@ def _stage_semantic(rule: dict[str, Any]) -> ValidationResult:
                 details={"citation_index": i, "citation": cit},
             )
 
+    if rule.get("monetary_output"):
+        ast = rule.get("ast") or {}
+        if not _final_result_is_rounded(ast):
+            return ValidationResult(
+                stage=ValidationStage.SEMANTIC,
+                passed=False,
+                message=(
+                    "Rule declares monetary_output=true but the final result is not "
+                    "wrapped in round(). Wrap the outermost expression in round(expr, 2) "
+                    "per the rounding policy (docs/rules/rounding-policy.md)."
+                ),
+            )
+
     return ValidationResult(
         stage=ValidationStage.SEMANTIC,
         passed=True,
@@ -161,7 +227,8 @@ def _stage_semantic(rule: dict[str, Any]) -> ValidationResult:
 
 
 def _stage_canonicalisation(rule: dict[str, Any]) -> ValidationResult:
-    """Stage 3: Recompile the DSL and verify checksum matches stored value."""
+    """Stage 3: Recompile the DSL and verify both the stored AST and the
+    recompiled AST produce the same checksum as the stored checksum."""
     dsl_source = rule.get("dsl_source", "")
     stored_checksum = rule.get("checksum", "")
 
@@ -179,9 +246,29 @@ def _stage_canonicalisation(rule: dict[str, Any]) -> ValidationResult:
         return ValidationResult(
             stage=ValidationStage.CANONICALISATION,
             passed=False,
-            message="Checksum mismatch: stored AST does not match recompiled DSL",
+            message="Checksum mismatch: recompiled DSL checksum differs from stored checksum",
             details={"stored": stored_checksum, "computed": computed},
         )
+
+    # Also verify the stored AST itself checksums to the same value.
+    # A tampered AST could pass the DSL-recompile check above while diverging
+    # from what the DSL actually describes.
+    stored_ast = rule.get("ast")
+    if stored_ast is not None:
+        stored_ast_checksum = _compute_ast_checksum(stored_ast)
+        if stored_ast_checksum != stored_checksum:
+            return ValidationResult(
+                stage=ValidationStage.CANONICALISATION,
+                passed=False,
+                message=(
+                    "Stored AST checksum does not match stored checksum — "
+                    "AST may have been tampered with independently of the DSL"
+                ),
+                details={
+                    "stored_checksum": stored_checksum,
+                    "stored_ast_checksum": stored_ast_checksum,
+                },
+            )
 
     return ValidationResult(
         stage=ValidationStage.CANONICALISATION,

@@ -6,6 +6,8 @@ Rules:
 - No extra whitespace
 - Metadata excluded from structural checksums
 - None-valued keys stripped before hashing
+- LET bindings are already ordered lists [[name, expr], ...] in the schema,
+  so evaluation order is captured structurally without special-casing here
 """
 
 from __future__ import annotations

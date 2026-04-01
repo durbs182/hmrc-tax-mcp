@@ -86,13 +86,17 @@ class Evaluator:
             return var_result
 
         if t == "LET":
-            new_scope = dict(self.vars)
-            for k, v in node["bindings"].items():
-                new_scope[k] = self.eval(v, depth + 1)
-            inner = Evaluator(new_scope, self.max_depth, self.trace)
+            # Evaluate bindings sequentially so each can reference earlier ones.
+            # Bindings are an ordered list of [name, expr] pairs.
+            accumulated = dict(self.vars)
+            for k, v in node["bindings"]:
+                binding_eval = Evaluator(accumulated, self.max_depth, self.trace)
+                accumulated[k] = binding_eval.eval(v, depth + 1)
+                self.trace_steps.extend(binding_eval.trace_steps)
+            inner = Evaluator(accumulated, self.max_depth, self.trace)
             result = inner.eval(node["body"], depth + 1)
             self.trace_steps.extend(inner.trace_steps)
-            self._record(t, {"bindings": list(node["bindings"].keys())}, result)
+            self._record(t, {"bindings": [pair[0] for pair in node["bindings"]]}, result)
             return result
 
         if t == "IF":
@@ -107,32 +111,38 @@ class Evaluator:
         # ------------------------------------------------------------------
         if t == "ADD":
             args = [self.eval(a, depth + 1) for a in node["args"]]
-            result = Decimal(sum(a for a in args if isinstance(a, Decimal)))
+            dec_args = self._require_decimal_args(args, "ADD")
+            result = Decimal(sum(dec_args))
             self._record(t, {"args": args}, result)
             return result
 
         if t == "SUB":
             args = [self.eval(a, depth + 1) for a in node["args"]]
-            dec_args = [a for a in args if isinstance(a, Decimal)]
+            dec_args = self._require_decimal_args(args, "SUB")
+            if len(dec_args) < 2:
+                raise EvaluationError("SUB: requires at least 2 arguments")
             result = dec_args[0] - sum(dec_args[1:])
             self._record(t, {"args": args}, result)
             return result
 
         if t == "MUL":
             args = [self.eval(a, depth + 1) for a in node["args"]]
+            dec_args = self._require_decimal_args(args, "MUL")
             result = Decimal("1")
-            for a in args:
-                if isinstance(a, Decimal):
-                    result *= a
+            for a in dec_args:
+                result *= a
             self._record(t, {"args": args}, result)
             return result
 
         if t == "DIV":
             args = [self.eval(a, depth + 1) for a in node["args"]]
-            a0, a1 = args[0], args[1]
-            if isinstance(a1, Decimal) and a1 == 0:
+            dec_args = self._require_decimal_args(args, "DIV")
+            if len(dec_args) != 2:
+                raise EvaluationError("DIV: requires exactly 2 arguments")
+            a0, a1 = dec_args
+            if a1 == 0:
                 raise EvaluationError("Division by zero")
-            result = a0 / a1  # type: ignore[assignment]
+            result = a0 / a1
             self._record(t, {"args": args}, result)
             return result
 
@@ -140,16 +150,16 @@ class Evaluator:
         # Comparisons
         # ------------------------------------------------------------------
         if t in {"GT", "LT", "GTE", "LTE", "EQ", "NEQ"}:
-            a, b = self.eval(node["args"][0], depth + 1), self.eval(node["args"][1], depth + 1)
-            bool_result: bool = {
+            lhs, rhs = self.eval(node["args"][0], depth + 1), self.eval(node["args"][1], depth + 1)
+            bool_result: Decimal | bool = {
                 "GT": lambda x, y: x > y,
                 "LT": lambda x, y: x < y,
                 "GTE": lambda x, y: x >= y,
                 "LTE": lambda x, y: x <= y,
                 "EQ": lambda x, y: x == y,
                 "NEQ": lambda x, y: x != y,
-            }[t](a, b)
-            self._record(t, {"a": a, "b": b}, bool_result)
+            }[t](lhs, rhs)
+            self._record(t, {"a": lhs, "b": rhs}, bool_result)
             return bool_result
 
         # ------------------------------------------------------------------
@@ -170,6 +180,19 @@ class Evaluator:
             bool_result = not bool(val)
             self._record(t, {"val": val}, bool_result)
             return bool_result
+
+        if t == "NEG":
+            neg_args = node.get("args")
+            if not isinstance(neg_args, list) or len(neg_args) != 1:
+                raise EvaluationError("NEG: expected exactly 1 argument")
+            val = self.eval(neg_args[0], depth + 1)
+            if isinstance(val, bool):
+                raise EvaluationError("NEG: cannot negate a boolean")
+            if not isinstance(val, Decimal):
+                raise EvaluationError(f"NEG: argument must be a number, got {type(val).__name__!r}")
+            result = -val
+            self._record(t, {"val": val}, result)
+            return result
 
         # ------------------------------------------------------------------
         # Domain-specific: BAND_APPLY
@@ -218,14 +241,57 @@ class Evaluator:
             fn = node["name"]
             args = [self.eval(a, depth + 1) for a in node["args"]]
             if fn == "percent":
+                if len(args) != 2:
+                    raise EvaluationError("percent(): requires exactly 2 arguments (value, rate)")
                 if not isinstance(args[0], Decimal) or not isinstance(args[1], Decimal):
                     raise EvaluationError("percent(): args must be numbers")
                 result = args[0] * (args[1] / Decimal("100"))
                 self._record(t, {"fn": fn, "args": args}, result)
                 return result
+            if fn == "round":
+                # round(value, decimal_places) — explicit rounding for UK tax computations.
+                # UK self-assessment typically rounds income tax to the nearest penny.
+                if len(args) != 2:
+                    raise EvaluationError("round(): requires exactly 2 arguments (value, places)")
+                value, places = args[0], args[1]
+                if isinstance(value, bool) or not isinstance(value, Decimal):
+                    raise EvaluationError("round(): first argument must be a number")
+                if isinstance(places, bool) or not isinstance(places, Decimal):
+                    raise EvaluationError(
+                        "round(): second argument (decimal places) must be a number"
+                    )
+                if places != places.to_integral_value():
+                    raise EvaluationError(
+                        "round(): decimal places must be an integer-valued number"
+                    )
+                places_int = int(places)
+                if places_int < 0:
+                    raise EvaluationError(
+                        "round(): decimal places must be non-negative"
+                    )
+                from decimal import ROUND_HALF_UP
+                quantizer = Decimal(10) ** -places_int
+                result = value.quantize(quantizer, rounding=ROUND_HALF_UP)
+                self._record(t, {"fn": fn, "args": args}, result)
+                return result
             raise EvaluationError(f"Unknown function: {fn!r}")
 
         raise EvaluationError(f"Unknown AST node type: {t!r}")
+
+    def _require_decimal_args(self, args: list[Any], op: str) -> list[Decimal]:
+        """Validate that all args are Decimal (not bool, str, or None)."""
+        result: list[Decimal] = []
+        for i, a in enumerate(args):
+            if isinstance(a, bool):
+                raise EvaluationError(
+                    f"{op}: argument {i} is bool; numeric arguments required"
+                )
+            if not isinstance(a, Decimal):
+                raise EvaluationError(
+                    f"{op}: argument {i} is {type(a).__name__!r}; numeric arguments required"
+                )
+            result.append(a)
+        return result
 
     def _record(self, node: str, inputs: dict[str, Any], output: Any) -> None:
         if self.trace:

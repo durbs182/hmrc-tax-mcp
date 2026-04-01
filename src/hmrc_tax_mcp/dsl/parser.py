@@ -205,6 +205,9 @@ class Parser:
         if self._peek() and self._peek().kind == "IDENT" and self._peek().value == "not":  # type: ignore[union-attr]
             self._advance()
             return {"node": "NOT", "args": [self._parse_unary()]}
+        if self._peek() and self._peek().kind == "OP" and self._peek().value == "-":  # type: ignore[union-attr]
+            self._advance()
+            return {"node": "NEG", "args": [self._parse_unary()]}
         return self._parse_primary()
 
     def _parse_primary(self) -> dict[str, Any]:
@@ -218,10 +221,12 @@ class Parser:
             v: int | float = int(tok.value) if "." not in tok.value else float(tok.value)
             return {"node": "CONST", "value": v}
 
-        # String literal
+        # String literal — not supported; the evaluator has no string type
         if tok.kind == "STRING":
-            self._advance()
-            return {"node": "CONST", "value": tok.value[1:-1]}  # strip quotes
+            raise ParseError(
+                f"String literals are not supported in this DSL (got {tok.value!r}). "
+                "Only numeric and boolean constants are allowed."
+            )
 
         # Parenthesised expression
         if tok.kind == "PUNCT" and tok.value == "(":

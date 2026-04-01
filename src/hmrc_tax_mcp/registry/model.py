@@ -29,3 +29,4 @@ class RuleEntry(BaseModel):
     provenance: str  # "manual" | "nl_extracted" | "migrated"
     published_at: datetime
     reviewed_by: str | None = None
+    monetary_output: bool = False  # True if this rule produces a sterling monetary amount

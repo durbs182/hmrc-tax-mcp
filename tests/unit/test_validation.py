@@ -281,3 +281,84 @@ class TestEndToEnd:
         assert _all_pass(results), [
             f"{r.stage}: {r.message}" for r in results if not r.passed
         ]
+
+    def test_stored_ast_diverges_from_dsl_fails_stage3(self) -> None:
+        """Stage 3 must fail when rule.ast was tampered but dsl_source is intact."""
+        from hmrc_tax_mcp.ast.canonical import ast_checksum
+
+        rule = _rule_dict("cgt_exempt")
+        # Replace stored AST with a different valid AST (different constant value)
+        tampered_ast = {"node": "CONST", "value": 9999}
+        rule["ast"] = tampered_ast
+        # Recompute checksum from tampered AST so the checksum itself is consistent,
+        # but the stored AST no longer matches what DSL would compile to.
+        rule["checksum"] = ast_checksum(tampered_ast)
+
+        results = validate_rule(rule)
+        # Stage 3 should detect that stored AST diverges from recompiled DSL AST
+        assert not results[2].passed, "Stage 3 should fail when stored AST diverges from DSL"
+
+
+# ---------------------------------------------------------------------------
+# Rounding policy enforcement (monetary_output) — issue 2 from re-review
+# ---------------------------------------------------------------------------
+
+class TestRoundingPolicyEnforcement:
+    """Stage 2 must fail if monetary_output=True but the final result is not round()."""
+
+    def test_monetary_rule_without_round_fails_stage2(self) -> None:
+        rule = _rule_dict("income_tax_bands")
+        rule["monetary_output"] = True
+        # income_tax_bands AST is BAND_APPLY — final node is not round()
+        results = validate_rule(rule)
+        assert not results[1].passed
+        assert "round" in results[1].message.lower()
+
+    def test_monetary_rule_with_round_buried_not_final_fails(self) -> None:
+        """round() inside a sub-expression but not wrapping the final result must fail."""
+        rule = _rule_dict("income_tax_bands")
+        rule["monetary_output"] = True
+        # ADD(round(...), CONST) — round is NOT the final result
+        rule["ast"] = {
+            "node": "ADD",
+            "args": [
+                {"node": "CALL", "name": "round", "args": [
+                    {"node": "CONST", "value": 1}, {"node": "CONST", "value": 2}
+                ]},
+                {"node": "CONST", "value": 100},
+            ],
+        }
+        results = validate_rule(rule)
+        assert not results[1].passed
+
+    def test_non_monetary_rule_without_round_passes_stage2(self) -> None:
+        rule = _rule_dict("income_tax_bands")
+        rule["monetary_output"] = False  # default
+        results = validate_rule(rule)
+        assert results[1].passed
+
+    def test_monetary_rule_with_round_as_final_passes_stage2(self) -> None:
+        rule = _rule_dict("income_tax_bands")
+        rule["monetary_output"] = True
+        rule["ast"] = {
+            "node": "CALL",
+            "name": "round",
+            "args": [rule["ast"], {"node": "CONST", "value": 2}],
+        }
+        results = validate_rule(rule)
+        assert results[1].passed, results[1].message
+
+    def test_monetary_let_with_round_body_passes(self) -> None:
+        """LET whose body is round() should pass — LET body is the final value."""
+        rule = _rule_dict("income_tax_bands")
+        rule["monetary_output"] = True
+        rule["ast"] = {
+            "node": "LET",
+            "bindings": [["tax", rule["ast"]]],
+            "body": {"node": "CALL", "name": "round", "args": [
+                {"node": "VAR", "name": "tax"},
+                {"node": "CONST", "value": 2},
+            ]},
+        }
+        results = validate_rule(rule)
+        assert results[1].passed, results[1].message

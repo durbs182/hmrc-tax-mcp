@@ -26,6 +26,14 @@ def _registry_key(rule_id: str, version: str, jurisdiction: str) -> str:
     return f"{rule_id}@{version}@{jurisdiction}"
 
 
+def _semver_key(version: str) -> tuple[int, ...]:
+    """Parse a version string into a comparable tuple of ints (semver order)."""
+    try:
+        return tuple(int(x) for x in version.split("."))
+    except ValueError:
+        return (0,)
+
+
 def load_all_rules() -> None:
     """Load all YAML rule files from the registry/rules directory tree."""
     global _loaded
@@ -47,11 +55,12 @@ def get_rule(
     jurisdiction: str | None = None,
 ) -> RuleEntry | None:
     """
-    Look up a rule by ID and version. 'latest' returns the highest semver string.
+    Look up a rule by ID and version. 'latest' returns the highest semver version.
 
     When multiple jurisdictions publish the same rule_id (e.g. ``income_tax_bands``
     exists for both ``rUK`` and ``scotland``), pass ``jurisdiction`` to disambiguate.
-    Without it the function returns an arbitrary match among the highest versions.
+    Omitting ``jurisdiction`` when multiple jurisdictions match raises ValueError
+    to prevent accidentally returning the wrong jurisdiction's rule.
     """
     if not _loaded:
         load_all_rules()
@@ -62,6 +71,12 @@ def get_rule(
             if e.rule_id == rule_id and e.version == version
             and (jurisdiction is None or e.jurisdiction == jurisdiction)
         ]
+        if len(matches) > 1 and jurisdiction is None:
+            jurisdictions = sorted({e.jurisdiction for e in matches})
+            raise ValueError(
+                f"Rule {rule_id!r} version {version!r} exists in multiple jurisdictions "
+                f"{jurisdictions}; pass jurisdiction= to disambiguate"
+            )
         return matches[0] if matches else None
 
     matches = [
@@ -71,7 +86,17 @@ def get_rule(
     ]
     if not matches:
         return None
-    return sorted(matches, key=lambda e: e.version)[-1]
+
+    # Check for jurisdiction ambiguity before selecting latest version.
+    if jurisdiction is None:
+        ambig_jurisdictions = {e.jurisdiction for e in matches}
+        if len(ambig_jurisdictions) > 1:
+            raise ValueError(
+                f"Rule {rule_id!r} exists in multiple jurisdictions "
+                f"{sorted(ambig_jurisdictions)}; pass jurisdiction= to disambiguate"
+            )
+
+    return sorted(matches, key=lambda e: _semver_key(e.version))[-1]
 
 
 def list_rules() -> list[RuleEntry]:

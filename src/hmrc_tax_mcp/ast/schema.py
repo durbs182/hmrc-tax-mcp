@@ -6,7 +6,7 @@ It is intentionally NOT Turing-complete: no loops, no recursion, no arbitrary ex
 
 Approved node types:
   Primitive:       CONST, VAR, LET, IF
-  Arithmetic:      ADD, SUB, MUL, DIV
+  Arithmetic:      ADD, SUB, MUL, DIV, NEG
   Comparison:      GT, LT, GTE, LTE, EQ, NEQ
   Logical:         AND, OR, NOT
   Domain-specific: BAND_APPLY, TAPER, CALL
@@ -25,7 +25,8 @@ from pydantic import BaseModel, Field
 
 class ConstNode(BaseModel):
     node: Literal["CONST"]
-    value: int | float | str | bool | None
+    # bool must precede int because bool is a subclass of int in Python
+    value: bool | int | float
     metadata: dict[str, Any] | None = None
 
 
@@ -37,7 +38,9 @@ class VarNode(BaseModel):
 
 class LetNode(BaseModel):
     node: Literal["LET"]
-    bindings: dict[str, ASTNode]
+    # Ordered list of (name, expr) pairs so evaluation order is explicit in the schema.
+    # Use a list instead of a dict so tooling can't silently reorder bindings.
+    bindings: list[tuple[str, ASTNode]]
     body: ASTNode
     metadata: dict[str, Any] | None = None
 
@@ -77,6 +80,13 @@ class MulNode(BaseModel):
 
 class DivNode(BaseModel):
     node: Literal["DIV"]
+    args: list[ASTNode]
+    metadata: dict[str, Any] | None = None
+
+
+class NegNode(BaseModel):
+    """Unary negation: evaluates args[0] and returns its arithmetic inverse."""
+    node: Literal["NEG"]
     args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
@@ -186,7 +196,7 @@ class CallNode(BaseModel):
 ASTNode = Annotated[
     Union[
         ConstNode, VarNode, LetNode, IfNode,
-        AddNode, SubNode, MulNode, DivNode,
+        AddNode, SubNode, MulNode, DivNode, NegNode,
         GtNode, LtNode, GteNode, LteNode, EqNode, NeqNode,
         AndNode, OrNode, NotNode,
         BandApplyNode, TaperNode, CallNode,
@@ -195,7 +205,7 @@ ASTNode = Annotated[
 ]
 
 # Rebuild forward references
-for _cls in [LetNode, IfNode, AddNode, SubNode, MulNode, DivNode,
+for _cls in [LetNode, IfNode, AddNode, SubNode, MulNode, DivNode, NegNode,
              GtNode, LtNode, GteNode, LteNode, EqNode, NeqNode,
              AndNode, OrNode, NotNode, BandApplyNode, TaperNode, CallNode]:
     _cls.model_rebuild()  # type: ignore[attr-defined]
@@ -206,7 +216,7 @@ def parse_ast(data: dict[str, Any]) -> ASTNode:
     node_type = data.get("node")
     _map: dict[str, type[BaseModel]] = {
         "CONST": ConstNode, "VAR": VarNode, "LET": LetNode, "IF": IfNode,
-        "ADD": AddNode, "SUB": SubNode, "MUL": MulNode, "DIV": DivNode,
+        "ADD": AddNode, "SUB": SubNode, "MUL": MulNode, "DIV": DivNode, "NEG": NegNode,
         "GT": GtNode, "LT": LtNode, "GTE": GteNode, "LTE": LteNode,
         "EQ": EqNode, "NEQ": NeqNode,
         "AND": AndNode, "OR": OrNode, "NOT": NotNode,

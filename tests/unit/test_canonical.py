@@ -72,3 +72,43 @@ class TestAstChecksum:
         a = ast_checksum({"node": "CONST", "value": 12570})
         b = ast_checksum({"node": "CONST", "value": 12570, "metadata": {"x": 1}})
         assert a == b
+
+
+# ---------------------------------------------------------------------------
+# LET binding order — issue 1 from re-review
+# ---------------------------------------------------------------------------
+
+class TestLetBindingOrder:
+    """LET bindings must be ordered in the canonical form so that two ASTs
+    with the same bindings in different order produce different checksums."""
+
+    def _let_ast(self, order: list[str]) -> dict:
+        return {
+            "node": "LET",
+            "bindings": [[name, {"node": "CONST", "value": i}] for i, name in enumerate(order)],
+            "body": {"node": "VAR", "name": order[-1]},
+        }
+
+    def test_different_binding_order_yields_different_checksum(self) -> None:
+        from hmrc_tax_mcp.ast.canonical import ast_checksum
+        ast_ab = self._let_ast(["a", "b"])
+        ast_ba = self._let_ast(["b", "a"])
+        # Different insertion order → different canonical form → different checksum
+        assert ast_checksum(ast_ab) != ast_checksum(ast_ba)
+
+    def test_same_binding_order_yields_same_checksum(self) -> None:
+        from hmrc_tax_mcp.ast.canonical import ast_checksum
+        ast1 = self._let_ast(["x", "y", "z"])
+        ast2 = self._let_ast(["x", "y", "z"])
+        assert ast_checksum(ast1) == ast_checksum(ast2)
+
+    def test_bindings_are_ordered_list(self) -> None:
+        import json
+
+        from hmrc_tax_mcp.ast.canonical import canonicalise
+        ast = self._let_ast(["a", "b"])
+        canonical = json.loads(canonicalise(ast))
+        # bindings are already a list in the schema; canonical preserves order
+        assert isinstance(canonical["bindings"], list)
+        assert canonical["bindings"][0][0] == "a"
+        assert canonical["bindings"][1][0] == "b"

@@ -1,28 +1,25 @@
 rule_id: income_tax_bands
-version: "1.0.0"
+version: "1.0.1"
 tax_year: "2025-26"
 jurisdiction: rUK
 title: Income Tax Bands (rUK 2025-26)
 description: >
-  Applies the 2025-26 rUK income tax bands (starter, basic, higher, additional)
-  to taxable income. Input variable `taxable_income` is income after deduction of
-  the personal allowance. The nil-rate band (0–£12,570) is included so the rule
-  can also be used with gross income where the PA has not yet been deducted.
+  Applies the 2025-26 rUK income tax bands to post-personal-allowance taxable income.
+  Input variable `taxable_income` must be income AFTER deduction of the personal
+  allowance (i.e. apply pa_taper first). The nil-rate (0–£12,570) band has been
+  removed to eliminate ambiguity: if income is below the PA the caller should pass
+  zero or handle it before invoking this rule.
 dsl_source: |
   bands taxable_income:
-    0      to 12570  at 0%
     12570  to 50270  at 20%
     50270  to 125140 at 40%
-    125140+          at 45%
+    125140+           at 45%
 ast:
   node: BAND_APPLY
   args:
     - node: VAR
       name: taxable_income
   bands:
-    - lower: 0
-      upper: 12570
-      rate: 0.0
     - lower: 12570
       upper: 50270
       rate: 0.2
@@ -32,7 +29,7 @@ ast:
     - lower: 125140
       upper: null
       rate: 0.45
-checksum: "93d28d83674a1701a057e7bb8448977daeb9cbb233fe15fc058ee4c8070f4a88"
+checksum: "8b039b0158b5b906334a76d2810cdf90a3bb29ef487788f81974bc2387bbe6b1"
 citations:
   - label: "HMRC – Income Tax rates and Personal Allowances"
     url: "https://www.gov.uk/income-tax-rates"

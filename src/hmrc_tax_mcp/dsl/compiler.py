@@ -9,12 +9,12 @@ The compiler handles two forms:
   - Single-expression DSL (a bare expr with no let/return)
   - Multi-statement DSL with let bindings and a final return
 
-Multi-statement programs compile to a nested LET node:
+Multi-statement programs compile to a single LET node with an ordered bindings list:
   let a = 1
   let b = 2
   return a + b
 
-→ {"node": "LET", "bindings": {"a": CONST(1), "b": CONST(2)}, "body": ADD(VAR(a), VAR(b))}
+→ {"node": "LET", "bindings": [["a", CONST(1)], ["b", CONST(2)]], "body": ADD(VAR(a), VAR(b))}
 """
 
 from __future__ import annotations
@@ -26,6 +26,37 @@ from hmrc_tax_mcp.dsl.parser import parse
 
 class CompileError(Exception):
     pass
+
+
+def _validate_bands(bands: list[dict[str, Any]]) -> None:
+    """
+    Validate that bands are strictly monotonic: each band's lower must equal
+    the prior band's upper, and upper (if present) must be > lower.
+    """
+    from decimal import Decimal as _D
+
+    prev_upper: _D | None = None
+    open_ended_seen = False
+    for i, band in enumerate(bands):
+        if open_ended_seen:
+            raise CompileError(
+                f"Band {i}: a band cannot follow an open-ended band (upper=null); "
+                "the open-ended band must be the last entry"
+            )
+        lower = _D(str(band["lower"]))
+        upper = _D(str(band["upper"])) if band.get("upper") is not None else None
+        if upper is not None and upper <= lower:
+            raise CompileError(
+                f"Band {i}: upper ({upper}) must be greater than lower ({lower})"
+            )
+        if prev_upper is not None and lower != prev_upper:
+            raise CompileError(
+                f"Band {i}: lower ({lower}) must equal the prior band's upper ({prev_upper}); "
+                "bands must be contiguous and non-overlapping"
+            )
+        if upper is None:
+            open_ended_seen = True
+        prev_upper = upper
 
 
 def compile_dsl(dsl_text: str) -> dict[str, Any]:
@@ -49,16 +80,19 @@ def compile_dsl(dsl_text: str) -> dict[str, Any]:
         raise CompileError("DSL source is empty")
 
     # Separate let bindings from the final expression/return
-    bindings: dict[str, Any] = {}
+    # Use a list of (name, expr) pairs to preserve declaration order.
+    bindings: list[tuple[str, Any]] = []
+    bound_names: set[str] = set()
     body: dict[str, Any] | None = None
 
     for stmt in stmts:
         kind = stmt["stmt"]
         if kind == "let":
             name = stmt["name"]
-            if name in bindings:
+            if name in bound_names:
                 raise CompileError(f"Duplicate let binding: {name!r}")
-            bindings[name] = _compile_expr(stmt["expr"])
+            bindings.append((name, _compile_expr(stmt["expr"])))
+            bound_names.add(name)
         elif kind == "return":
             if body is not None:
                 raise CompileError("Multiple return statements are not allowed")
@@ -98,7 +132,7 @@ def _compile_expr(expr: dict[str, Any]) -> dict[str, Any]:
     # Arithmetic / logical / comparison nodes with "args" list
     if node in ("ADD", "SUB", "MUL", "DIV",
                 "GT", "LT", "GTE", "LTE", "EQ", "NEQ",
-                "AND", "OR", "NOT"):
+                "AND", "OR", "NOT", "NEG"):
         return {
             "node": node,
             "args": [_compile_expr(a) for a in expr["args"]],
@@ -106,14 +140,21 @@ def _compile_expr(expr: dict[str, Any]) -> dict[str, Any]:
 
     # CALL
     if node == "CALL":
-        _allowed_fns = {"percent"}
-        if expr["name"] not in _allowed_fns:
+        _fn_arities: dict[str, int] = {"percent": 2, "round": 2}
+        fn_name = expr["name"]
+        if fn_name not in _fn_arities:
             raise CompileError(
-                f"Unknown function {expr['name']!r}. Allowed: {sorted(_allowed_fns)}"
+                f"Unknown function {fn_name!r}. Allowed: {sorted(_fn_arities)}"
+            )
+        expected_arity = _fn_arities[fn_name]
+        actual_arity = len(expr["args"])
+        if actual_arity != expected_arity:
+            raise CompileError(
+                f"{fn_name}() requires exactly {expected_arity} argument(s), got {actual_arity}"
             )
         return {
             "node": "CALL",
-            "name": expr["name"],
+            "name": fn_name,
             "args": [_compile_expr(a) for a in expr["args"]],
         }
 
@@ -130,12 +171,13 @@ def _compile_expr(expr: dict[str, Any]) -> dict[str, Any]:
     if node == "LET":
         return {
             "node": "LET",
-            "bindings": {k: _compile_expr(v) for k, v in expr["bindings"].items()},
+            "bindings": [[k, _compile_expr(v)] for k, v in expr["bindings"]],
             "body": _compile_expr(expr["body"]),
         }
 
     # BAND_APPLY — parser already builds the bands list correctly
     if node == "BAND_APPLY":
+        _validate_bands(expr["bands"])
         return {
             "node": "BAND_APPLY",
             "args": [_compile_expr(a) for a in expr["args"]],

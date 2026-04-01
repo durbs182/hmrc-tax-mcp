@@ -56,31 +56,31 @@ def test_get_rule_snapshot_contains_all_ruk_2025_26() -> None:
 def test_income_tax_bands_rule_checksum() -> None:
     entry = get_rule("income_tax_bands", jurisdiction="rUK")
     assert entry is not None
-    assert entry.checksum == "93d28d83674a1701a057e7bb8448977daeb9cbb233fe15fc058ee4c8070f4a88"
+    assert entry.checksum == "8b039b0158b5b906334a76d2810cdf90a3bb29ef487788f81974bc2387bbe6b1"
 
 
 def test_pa_taper_rule_checksum() -> None:
-    entry = get_rule("pa_taper")
+    entry = get_rule("pa_taper", jurisdiction="rUK")
     assert entry is not None
     assert entry.checksum == "a4f5132af3452c998f5175aa6f2df0049f1ff6d2cf2e0040dfa7a950ad5b00f8"
 
 
 def test_pension_lsa_evaluates_correctly() -> None:
-    entry = get_rule("pension_lsa")
+    entry = get_rule("pension_lsa", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator().eval(entry.ast)
     assert result == Decimal("268275")
 
 
 def test_cgt_exempt_evaluates_correctly() -> None:
-    entry = get_rule("cgt_exempt")
+    entry = get_rule("cgt_exempt", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator().eval(entry.ast)
     assert result == Decimal("3000")
 
 
 def test_income_tax_bands_evaluates_basic_rate() -> None:
-    """£30,000 taxable income → £3,486 tax (20% on £17,430 above nil band)."""
+    """£30,000 taxable income (post-PA) → £3,486 tax (20% on £17,430 above £12,570 threshold)."""
     entry = get_rule("income_tax_bands", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator(variables={"taxable_income": Decimal("30000")}).eval(entry.ast)
@@ -89,28 +89,28 @@ def test_income_tax_bands_evaluates_basic_rate() -> None:
 
 def test_pa_taper_evaluates_partial_taper() -> None:
     """Income £110,000 → PA tapered to £7,570 (£10,000 excess → £5,000 reduction)."""
-    entry = get_rule("pa_taper")
+    entry = get_rule("pa_taper", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator(variables={"adjusted_net_income": Decimal("110000")}).eval(entry.ast)
     assert result == Decimal("7570")
 
 
 def test_cgt_rates_higher_rate() -> None:
-    entry = get_rule("cgt_rates")
+    entry = get_rule("cgt_rates", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator(variables={"is_higher_rate_taxpayer": True}).eval(entry.ast)
     assert result == Decimal("24")
 
 
 def test_cgt_rates_basic_rate() -> None:
-    entry = get_rule("cgt_rates")
+    entry = get_rule("cgt_rates", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator(variables={"is_higher_rate_taxpayer": False}).eval(entry.ast)
     assert result == Decimal("18")
 
 
 def test_state_pension_annual() -> None:
-    entry = get_rule("state_pension_annual")
+    entry = get_rule("state_pension_annual", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator().eval(entry.ast)
     assert result == Decimal("11502.40")
