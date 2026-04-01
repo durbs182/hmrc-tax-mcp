@@ -6,6 +6,8 @@ Rules:
 - No extra whitespace
 - Metadata excluded from structural checksums
 - None-valued keys stripped before hashing
+- LET bindings serialised as an ordered list [[name, expr], ...] so
+  evaluation order is captured in the checksum
 """
 
 from __future__ import annotations
@@ -13,6 +15,27 @@ from __future__ import annotations
 import hashlib
 import json
 from typing import Any
+
+
+def _preserve_let_binding_order(obj: Any) -> Any:
+    """Convert LET `bindings` dicts to ordered lists before key sorting.
+
+    LET bindings evaluate sequentially, so ``{"a": X, "b": Y}`` and
+    ``{"b": Y, "a": X}`` are semantically different. Representing them as
+    ``[["a", X], ["b", Y]]`` preserves insertion order through the
+    subsequent ``_sort_keys_deep`` pass (which sorts dict keys but leaves
+    lists intact).
+    """
+    if isinstance(obj, dict):
+        processed = {k: _preserve_let_binding_order(v) for k, v in obj.items()}
+        if processed.get("node") == "LET" and isinstance(processed.get("bindings"), dict):
+            processed["bindings"] = [
+                [k, v] for k, v in processed["bindings"].items()
+            ]
+        return processed
+    if isinstance(obj, list):
+        return [_preserve_let_binding_order(item) for item in obj]
+    return obj
 
 
 def _sort_keys_deep(obj: Any) -> Any:
@@ -54,7 +77,8 @@ def canonicalise(ast_dict: dict[str, Any], include_metadata: bool = False) -> st
     Returns:
         Compact, sorted-key JSON string suitable for hashing.
     """
-    data = _strip_none(_sort_keys_deep(ast_dict))
+    data = _preserve_let_binding_order(ast_dict)
+    data = _strip_none(_sort_keys_deep(data))
     if not include_metadata:
         data = _strip_metadata(data)
     return json.dumps(data, separators=(",", ":"), sort_keys=True)
