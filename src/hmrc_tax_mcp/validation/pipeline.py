@@ -42,18 +42,49 @@ _REQUIRED_FIELDS = {
 _VALID_PROVENANCES = {"manual", "nl_extracted", "migrated"}
 
 
+def _is_literal_two(arg: Any) -> bool:
+    """Return True if the AST node or value represents the numeric literal 2."""
+    # Handle plain Python numeric values directly.
+    if isinstance(arg, (int, float, Decimal)):
+        try:
+            return Decimal(str(arg)) == Decimal("2")
+        except Exception:
+            return False
+
+    # Handle common AST literal encodings, e.g. {"node": "NUMBER", "value": "2.00"}.
+    if isinstance(arg, dict):
+        if arg.get("node") in {"INT", "NUMBER", "DECIMAL", "LITERAL"}:
+            value = arg.get("value")
+            if isinstance(value, (int, float, Decimal)):
+                try:
+                    return Decimal(str(value)) == Decimal("2")
+                except Exception:
+                    return False
+            if isinstance(value, str):
+                try:
+                    return Decimal(value) == Decimal("2")
+                except Exception:
+                    return False
+
+    return False
+
+
 def _final_result_is_rounded(ast: Any) -> bool:
-    """Return True if the effective result of the AST is wrapped in round().
+    """Return True if the effective result of the AST is wrapped in round(expr, 2).
 
     Traverses LET bodies and IF branches so that wrapping patterns like
     ``let x = … in round(x, 2)`` are recognised. For IF nodes, both branches
-    must be rounded.
+    must be rounded to two decimal places.
     """
     if not isinstance(ast, dict):
         return False
     node = ast.get("node")
     if node == "CALL" and ast.get("name") == "round":
-        return True
+        # Enforce round(expr, 2): exactly two arguments and second is literal 2.
+        args = ast.get("args") or ast.get("arguments")
+        if isinstance(args, list) and len(args) == 2 and _is_literal_two(args[1]):
+            return True
+        return False
     if node == "LET":
         return _final_result_is_rounded(ast.get("body"))
     if node == "IF":
