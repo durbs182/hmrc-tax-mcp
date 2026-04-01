@@ -56,7 +56,7 @@ def test_get_rule_snapshot_contains_all_ruk_2025_26() -> None:
 def test_income_tax_bands_rule_checksum() -> None:
     entry = get_rule("income_tax_bands", jurisdiction="rUK")
     assert entry is not None
-    assert entry.checksum == "93d28d83674a1701a057e7bb8448977daeb9cbb233fe15fc058ee4c8070f4a88"
+    assert entry.checksum == "8b039b0158b5b906334a76d2810cdf90a3bb29ef487788f81974bc2387bbe6b1"
 
 
 def test_pa_taper_rule_checksum() -> None:
@@ -80,7 +80,7 @@ def test_cgt_exempt_evaluates_correctly() -> None:
 
 
 def test_income_tax_bands_evaluates_basic_rate() -> None:
-    """£30,000 taxable income → £3,486 tax (20% on £17,430 above nil band)."""
+    """£30,000 taxable income (post-PA) → £3,486 tax (20% on £17,430 above £12,570 threshold)."""
     entry = get_rule("income_tax_bands", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator(variables={"taxable_income": Decimal("30000")}).eval(entry.ast)

@@ -218,7 +218,8 @@ class TestScotlandVsRuk:
     def test_ruk_has_four_income_tax_bands(self) -> None:
         snapshot = get_rule_snapshot("2025-26", "rUK")
         itb = next(r for r in snapshot if r.rule_id == "income_tax_bands")
-        assert len(itb.ast["bands"]) == 4
+        # v1.0.1 removed the nil-rate band; rUK now has 3 rated bands (basic/higher/additional)
+        assert len(itb.ast["bands"]) == 3
 
     def test_scotland_top_rate_is_48_percent(self) -> None:
         snapshot = get_rule_snapshot("2025-26", "scotland")
