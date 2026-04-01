@@ -25,7 +25,8 @@ from pydantic import BaseModel, Field
 
 class ConstNode(BaseModel):
     node: Literal["CONST"]
-    value: int | float | str | bool | None
+    # bool must precede int because bool is a subclass of int in Python
+    value: bool | int | float
     metadata: dict[str, Any] | None = None
 
 
