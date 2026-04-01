@@ -34,4 +34,7 @@ jobs:
           queries: security-and-quality
 
       - name: Perform CodeQL Analysis
+        # Code Scanning requires GitHub Advanced Security (GHAS).
+        # On private repos without GHAS this step will warn but not block the workflow.
+        continue-on-error: true
         uses: github/codeql-action/analyze@v4
