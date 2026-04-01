@@ -28,6 +28,29 @@ class CompileError(Exception):
     pass
 
 
+def _validate_bands(bands: list[dict[str, Any]]) -> None:
+    """
+    Validate that bands are strictly monotonic: each band's lower must equal
+    the prior band's upper, and upper (if present) must be > lower.
+    """
+    from decimal import Decimal as _D
+
+    prev_upper: _D | None = None
+    for i, band in enumerate(bands):
+        lower = _D(str(band["lower"]))
+        upper = _D(str(band["upper"])) if band.get("upper") is not None else None
+        if upper is not None and upper <= lower:
+            raise CompileError(
+                f"Band {i}: upper ({upper}) must be greater than lower ({lower})"
+            )
+        if prev_upper is not None and lower != prev_upper:
+            raise CompileError(
+                f"Band {i}: lower ({lower}) must equal the prior band's upper ({prev_upper}); "
+                "bands must be contiguous and non-overlapping"
+            )
+        prev_upper = upper
+
+
 def compile_dsl(dsl_text: str) -> dict[str, Any]:
     """
     Compile DSL source text to a canonical AST dict.
@@ -136,6 +159,7 @@ def _compile_expr(expr: dict[str, Any]) -> dict[str, Any]:
 
     # BAND_APPLY — parser already builds the bands list correctly
     if node == "BAND_APPLY":
+        _validate_bands(expr["bands"])
         return {
             "node": "BAND_APPLY",
             "args": [_compile_expr(a) for a in expr["args"]],
