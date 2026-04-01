@@ -281,3 +281,19 @@ class TestEndToEnd:
         assert _all_pass(results), [
             f"{r.stage}: {r.message}" for r in results if not r.passed
         ]
+
+    def test_stored_ast_diverges_from_dsl_fails_stage3(self) -> None:
+        """Stage 3 must fail when rule.ast was tampered but dsl_source is intact."""
+        from hmrc_tax_mcp.ast.canonical import canonicalise, ast_checksum
+
+        rule = _rule_dict("cgt_exempt")
+        # Replace stored AST with a different valid AST (different constant value)
+        tampered_ast = {"node": "CONST", "value": 9999}
+        rule["ast"] = tampered_ast
+        # Recompute checksum from tampered AST so the checksum itself is consistent,
+        # but the stored AST no longer matches what DSL would compile to.
+        rule["checksum"] = ast_checksum(tampered_ast)
+
+        results = validate_rule(rule)
+        # Stage 3 should detect that stored AST diverges from recompiled DSL AST
+        assert not results[2].passed, "Stage 3 should fail when stored AST diverges from DSL"

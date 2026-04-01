@@ -250,3 +250,119 @@ class TestTrace:
         evaluator = Evaluator(variables={"income": 50000})
         evaluator.eval({"node": "VAR", "name": "income"})
         assert evaluator.trace_steps == []
+
+
+# ---------------------------------------------------------------------------
+# Tests for NEG (unary negation) — issue 3
+# ---------------------------------------------------------------------------
+
+class TestNeg:
+    def test_neg_integer(self) -> None:
+        assert ev({"node": "NEG", "args": [{"node": "CONST", "value": 42}]}) == Decimal("-42")
+
+    def test_neg_float(self) -> None:
+        assert ev({"node": "NEG", "args": [{"node": "CONST", "value": 3.5}]}) == Decimal("-3.5")
+
+    def test_neg_negative_becomes_positive(self) -> None:
+        assert ev({"node": "NEG", "args": [{"node": "CONST", "value": -10}]}) == Decimal("10")
+
+    def test_neg_via_dsl(self) -> None:
+        from hmrc_tax_mcp.dsl.compiler import compile_dsl
+        ast = compile_dsl("-income")
+        result = ev(ast, {"income": 1000})
+        assert result == Decimal("-1000")
+
+    def test_neg_bool_raises(self) -> None:
+        with pytest.raises(EvaluationError, match="NEG"):
+            ev({"node": "NEG", "args": [{"node": "CONST", "value": True}]})
+
+    def test_neg_nested(self) -> None:
+        # --x == x
+        inner = {"node": "NEG", "args": [{"node": "CONST", "value": 5}]}
+        assert ev({"node": "NEG", "args": [inner]}) == Decimal("5")
+
+
+# ---------------------------------------------------------------------------
+# Tests for round() call function — issue 3
+# ---------------------------------------------------------------------------
+
+class TestRoundCall:
+    def test_round_half_up(self) -> None:
+        result = ev({"node": "CALL", "name": "round", "args": [
+            {"node": "CONST", "value": 2.5},
+            {"node": "CONST", "value": 0},
+        ]})
+        assert result == Decimal("3")
+
+    def test_round_to_two_places(self) -> None:
+        result = ev({"node": "CALL", "name": "round", "args": [
+            {"node": "CONST", "value": 3.145},
+            {"node": "CONST", "value": 2},
+        ]})
+        assert result == Decimal("3.15")
+
+    def test_round_tax_amount(self) -> None:
+        # Simulates: round(income * 0.2, 0)
+        result = ev({"node": "CALL", "name": "round", "args": [
+            {"node": "MUL", "args": [
+                {"node": "CONST", "value": 30457},
+                {"node": "CONST", "value": 0.2},
+            ]},
+            {"node": "CONST", "value": 0},
+        ]})
+        assert result == Decimal("6091")
+
+    def test_round_wrong_arity_raises(self) -> None:
+        with pytest.raises(EvaluationError):
+            ev({"node": "CALL", "name": "round", "args": [{"node": "CONST", "value": 1}]})
+
+
+# ---------------------------------------------------------------------------
+# Tests for sequential LET bindings — issue 3
+# ---------------------------------------------------------------------------
+
+class TestLetSequential:
+    def test_later_binding_sees_earlier(self) -> None:
+        # let x = 10, y = x + 5 in y  →  15
+        ast = {
+            "node": "LET",
+            "bindings": {
+                "x": {"node": "CONST", "value": 10},
+                "y": {"node": "ADD", "args": [
+                    {"node": "VAR", "name": "x"},
+                    {"node": "CONST", "value": 5},
+                ]},
+            },
+            "body": {"node": "VAR", "name": "y"},
+        }
+        assert ev(ast) == Decimal("15")
+
+    def test_three_sequential_bindings(self) -> None:
+        # let a=1, b=a+1, c=b+1 in c  →  3
+        ast = {
+            "node": "LET",
+            "bindings": {
+                "a": {"node": "CONST", "value": 1},
+                "b": {"node": "ADD", "args": [
+                    {"node": "VAR", "name": "a"},
+                    {"node": "CONST", "value": 1},
+                ]},
+                "c": {"node": "ADD", "args": [
+                    {"node": "VAR", "name": "b"},
+                    {"node": "CONST", "value": 1},
+                ]},
+            },
+            "body": {"node": "VAR", "name": "c"},
+        }
+        assert ev(ast) == Decimal("3")
+
+    def test_outer_scope_not_polluted(self) -> None:
+        # Variables bound in LET are not visible outside
+        evaluator = Evaluator(variables={})
+        evaluator.eval({
+            "node": "LET",
+            "bindings": {"inner": {"node": "CONST", "value": 99}},
+            "body": {"node": "VAR", "name": "inner"},
+        })
+        with pytest.raises(EvaluationError, match="Unknown variable"):
+            evaluator.eval({"node": "VAR", "name": "inner"})

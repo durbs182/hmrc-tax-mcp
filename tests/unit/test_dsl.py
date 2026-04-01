@@ -208,3 +208,43 @@ bands taxable_income:
   125140+ at 45%
 """
         assert compile_and_eval(dsl, {"taxable_income": 30000}) == Decimal("6000")
+
+
+# ---------------------------------------------------------------------------
+# Band validation error tests — issue 3
+# ---------------------------------------------------------------------------
+
+class TestBandValidationErrors:
+    """Compiler must reject semantically invalid band definitions."""
+
+    def test_overlapping_bands_rejected(self) -> None:
+        from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl
+        dsl = """\
+bands income:
+  0 to 50000 at 20%
+  30000 to 100000 at 40%
+  100000+ at 45%
+"""
+        with pytest.raises(CompileError, match="contiguous and non-overlapping"):
+            compile_dsl(dsl)
+
+    def test_gap_between_bands_rejected(self) -> None:
+        from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl
+        dsl = """\
+bands income:
+  0 to 20000 at 20%
+  30000 to 100000 at 40%
+  100000+ at 45%
+"""
+        with pytest.raises(CompileError, match="contiguous and non-overlapping"):
+            compile_dsl(dsl)
+
+    def test_inverted_band_upper_lower_rejected(self) -> None:
+        from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl
+        dsl = """\
+bands income:
+  50000 to 0 at 20%
+  0+ at 40%
+"""
+        with pytest.raises(CompileError, match="greater than lower"):
+            compile_dsl(dsl)

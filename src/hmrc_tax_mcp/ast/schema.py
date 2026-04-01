@@ -83,9 +83,9 @@ class DivNode(BaseModel):
 
 
 class NegNode(BaseModel):
-    """Unary negation: evaluates `arg` and returns its arithmetic inverse."""
+    """Unary negation: evaluates args[0] and returns its arithmetic inverse."""
     node: Literal["NEG"]
-    arg: ASTNode
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
