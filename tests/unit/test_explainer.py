@@ -6,8 +6,8 @@ from hmrc_tax_mcp.explainer import _collect_variables, explain_rule
 from hmrc_tax_mcp.registry.store import get_rule
 
 
-def _rule(rule_id: str) -> dict:
-    entry = get_rule(rule_id)
+def _rule(rule_id: str, jurisdiction: str = "rUK") -> dict:
+    entry = get_rule(rule_id, jurisdiction=jurisdiction)
     assert entry is not None
     return entry.model_dump(mode="json")
 
@@ -30,7 +30,7 @@ class TestExplainRuleFields:
         assert "url" in result["citations"][0]
 
     def test_checksum_preserved(self) -> None:
-        entry = get_rule("income_tax_bands")
+        entry = get_rule("income_tax_bands", jurisdiction="rUK")
         assert entry is not None
         result = explain_rule(_rule("income_tax_bands"))
         assert result["checksum"] == entry.checksum

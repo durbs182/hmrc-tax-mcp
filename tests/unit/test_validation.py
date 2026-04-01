@@ -27,14 +27,15 @@ WORKED_EXAMPLES_DIR = (
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _rule_dict(rule_id: str) -> dict[str, Any]:
-    entry = get_rule(rule_id)
-    assert entry is not None, f"Rule {rule_id!r} not found"
+def _rule_dict(rule_id: str, jurisdiction: str = "rUK") -> dict[str, Any]:
+    entry = get_rule(rule_id, jurisdiction=jurisdiction)
+    assert entry is not None, f"Rule {rule_id!r} (jurisdiction={jurisdiction!r}) not found"
     return entry.model_dump()
 
 
-def _run(rule_id: str, examples: list[WorkedExample] | None = None) -> list:
-    return validate_rule(_rule_dict(rule_id), examples)
+def _run(rule_id: str, examples: list[WorkedExample] | None = None,
+         jurisdiction: str = "rUK") -> list:
+    return validate_rule(_rule_dict(rule_id, jurisdiction=jurisdiction), examples)
 
 
 def _all_pass(results: list) -> bool:

@@ -44,16 +44,16 @@ def tool_list_rules() -> dict:
     ]
 
 
-def tool_get_rule(rule_id: str, version: str = "latest") -> dict:
-    rule = get_rule(rule_id, version)
+def tool_get_rule(rule_id: str, version: str = "latest", jurisdiction: str = "rUK") -> dict:
+    rule = get_rule(rule_id, version, jurisdiction=jurisdiction)
     if rule is None:
         return {"error": "Rule not found"}
     return rule.model_dump(mode="json")
 
 
 def tool_execute_rule(rule_id: str, inputs: dict, version: str = "latest",
-                      trace: bool = False) -> dict:
-    rule = get_rule(rule_id, version)
+                      trace: bool = False, jurisdiction: str = "rUK") -> dict:
+    rule = get_rule(rule_id, version, jurisdiction=jurisdiction)
     if rule is None:
         return {"error": "Rule not found"}
     evaluator = Evaluator(variables=inputs, trace=trace)
@@ -73,15 +73,16 @@ def tool_execute_rule(rule_id: str, inputs: dict, version: str = "latest",
     return result
 
 
-def tool_explain_rule(rule_id: str, version: str = "latest") -> dict:
-    rule = get_rule(rule_id, version)
+def tool_explain_rule(rule_id: str, version: str = "latest", jurisdiction: str = "rUK") -> dict:
+    rule = get_rule(rule_id, version, jurisdiction=jurisdiction)
     if rule is None:
         return {"error": "Rule not found"}
     return explain_rule(rule.model_dump(mode="json"))
 
 
-def tool_trace_execution(rule_id: str, inputs: dict, version: str = "latest") -> dict:
-    rule = get_rule(rule_id, version)
+def tool_trace_execution(rule_id: str, inputs: dict, version: str = "latest",
+                         jurisdiction: str = "rUK") -> dict:
+    rule = get_rule(rule_id, version, jurisdiction=jurisdiction)
     if rule is None:
         return {"error": "Rule not found"}
     evaluator = Evaluator(variables=inputs, trace=True)
@@ -100,8 +101,8 @@ def tool_trace_execution(rule_id: str, inputs: dict, version: str = "latest") ->
     }
 
 
-def tool_validate_rule(rule_id: str, version: str = "latest") -> dict:
-    rule = get_rule(rule_id, version)
+def tool_validate_rule(rule_id: str, version: str = "latest", jurisdiction: str = "rUK") -> dict:
+    rule = get_rule(rule_id, version, jurisdiction=jurisdiction)
     if rule is None:
         return {"error": "Rule not found"}
     results = validate_rule(rule.model_dump())

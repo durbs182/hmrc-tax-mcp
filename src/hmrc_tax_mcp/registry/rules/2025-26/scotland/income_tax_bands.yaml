@@ -1,0 +1,58 @@
+rule_id: income_tax_bands
+version: "1.0.0"
+tax_year: "2025-26"
+jurisdiction: scotland
+title: Income Tax Bands (Scotland 2025-26)
+description: >
+  Applies the 2025-26 Scottish income tax bands to non-savings, non-dividend income.
+  Scotland operates six rates set by the Scottish Parliament: starter (19%), basic (20%),
+  intermediate (21%), higher (42%), advanced (45%) and top (48%). The nil-rate band
+  (0–£12,570) reflects the UK-wide personal allowance. Input variable `taxable_income`
+  is income after deduction of the personal allowance.
+dsl_source: |
+  bands taxable_income:
+    0      to 12570  at 0%
+    12570  to 15397  at 19%
+    15397  to 27491  at 20%
+    27491  to 43662  at 21%
+    43662  to 75000  at 42%
+    75000  to 125140 at 45%
+    125140+          at 48%
+ast:
+  node: BAND_APPLY
+  args:
+    - node: VAR
+      name: taxable_income
+  bands:
+    - lower: 0
+      upper: 12570
+      rate: 0.0
+    - lower: 12570
+      upper: 15397
+      rate: 0.19
+    - lower: 15397
+      upper: 27491
+      rate: 0.2
+    - lower: 27491
+      upper: 43662
+      rate: 0.21
+    - lower: 43662
+      upper: 75000
+      rate: 0.42
+    - lower: 75000
+      upper: 125140
+      rate: 0.45
+    - lower: 125140
+      upper: null
+      rate: 0.48
+checksum: "68d10f5dd9a9209b1ed41282d3521110bdcb237260d1163dd37e393d5d2dca89"
+citations:
+  - label: "Scottish Government – Income Tax 2025-26 rates and bands"
+    url: "https://www.gov.scot/publications/scottish-income-tax-2025-to-2026/"
+  - label: "HMRC – Scottish Income Tax"
+    url: "https://www.gov.uk/scottish-income-tax"
+  - label: "Scotland Act 2016 s.13 – Scottish rate of income tax"
+    url: "https://www.legislation.gov.uk/ukpga/2016/11/section/13"
+provenance: manual
+published_at: "2025-04-06T00:00:00Z"
+reviewed_by: null

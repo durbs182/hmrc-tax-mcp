@@ -66,8 +66,12 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain UK tax strateg
 - [x] All output permanently tagged `reviewed_by: null` — mandatory human review before publication
 - [x] 32 new tests (all mocked — no real API calls); **221 total tests passing**
 
-### Phase 7 — Scottish Income Tax
-- [ ] `scotland-rules` — Scottish income tax bands 2025–26; jurisdiction field support
+### Phase 7 — Scottish Income Tax ✅
+- [x] `scotland-rules` — 6 Scotland YAML rules: income_tax_bands (6-band: starter/basic/intermediate/higher/advanced/top), pa_taper, savings_allowance_starter, savings_allowance_basic, savings_allowance_higher, dividend_allowance
+- [x] Registry key updated to `{rule_id}@{version}@{jurisdiction}` — supports same rule_id across jurisdictions
+- [x] `get_rule()` gains optional `jurisdiction` parameter for disambiguation
+- [x] Worked examples for Scotland income_tax_bands (7 cases) and pa_taper (5 cases)
+- [x] 33 new tests (`test_scotland_rules.py`); **254 total tests passing**
 
 ### Phase 8 — Integration
 - [ ] `integration-docs` — Integration guide: how later-life-planner calls the MCP tools

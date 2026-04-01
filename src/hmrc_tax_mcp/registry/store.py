@@ -22,6 +22,10 @@ def _rules_dir() -> Path:
     return Path(__file__).parent / "rules"
 
 
+def _registry_key(rule_id: str, version: str, jurisdiction: str) -> str:
+    return f"{rule_id}@{version}@{jurisdiction}"
+
+
 def load_all_rules() -> None:
     """Load all YAML rule files from the registry/rules directory tree."""
     global _loaded
@@ -32,20 +36,39 @@ def load_all_rules() -> None:
         if data is None:
             continue
         entry = RuleEntry.model_validate(data)
-        key = f"{entry.rule_id}@{entry.version}"
+        key = _registry_key(entry.rule_id, entry.version, entry.jurisdiction)
         _registry[key] = entry
     _loaded = True
 
 
-def get_rule(rule_id: str, version: str = "latest") -> RuleEntry | None:
-    """Look up a rule by ID and version. 'latest' returns the highest semver string."""
+def get_rule(
+    rule_id: str,
+    version: str = "latest",
+    jurisdiction: str | None = None,
+) -> RuleEntry | None:
+    """
+    Look up a rule by ID and version. 'latest' returns the highest semver string.
+
+    When multiple jurisdictions publish the same rule_id (e.g. ``income_tax_bands``
+    exists for both ``rUK`` and ``scotland``), pass ``jurisdiction`` to disambiguate.
+    Without it the function returns an arbitrary match among the highest versions.
+    """
     if not _loaded:
         load_all_rules()
 
     if version != "latest":
-        return _registry.get(f"{rule_id}@{version}")
+        matches = [
+            e for e in _registry.values()
+            if e.rule_id == rule_id and e.version == version
+            and (jurisdiction is None or e.jurisdiction == jurisdiction)
+        ]
+        return matches[0] if matches else None
 
-    matches = [e for e in _registry.values() if e.rule_id == rule_id]
+    matches = [
+        e for e in _registry.values()
+        if e.rule_id == rule_id
+        and (jurisdiction is None or e.jurisdiction == jurisdiction)
+    ]
     if not matches:
         return None
     return sorted(matches, key=lambda e: e.version)[-1]

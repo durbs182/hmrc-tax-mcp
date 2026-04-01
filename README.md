@@ -28,7 +28,7 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain tax strategies
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                # 221 tests
+pytest                # 254 tests
 hmrc-tax-mcp          # starts MCP server on stdio (requires Python ≥3.10 + pip install -e ".[server]")
 ```
 
@@ -61,7 +61,7 @@ blocked until a human engineer:
 | Year | Jurisdiction | Rules |
 |------|-------------|-------|
 | 2025–26 | rUK | 11 rules: income tax bands, PA taper, CGT, UFPLS fractions, pension LSA, state pension, savings allowances, dividend allowance |
-| 2025–26 | Scotland | *(coming in Phase 7)* |
+| 2025–26 | Scotland | ✅ 6 rules (income_tax_bands + 5 shared rules)* |
 
 ## DSL Quick Reference
 
@@ -107,7 +107,7 @@ Every rule passes 6 stages before publication:
 | 4 | 6-stage validation pipeline | ✅ done |
 | 5 | MCP server remaining tools (explain_rule, trace_execution) | ✅ done |
 | 6 | NL extractor (LLM-assisted, human-reviewed) | ✅ |
-| 7 | Scottish income tax jurisdiction | ⏳ |
+| 7 | Scottish income tax jurisdiction | ✅ |
 | 8 | Integration guide for later-life-planner | ⏳ |
 
 ## Design Principles
