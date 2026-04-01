@@ -108,7 +108,7 @@ Every rule passes 6 stages before publication:
 | 5 | MCP server remaining tools (explain_rule, trace_execution) | ✅ done |
 | 6 | NL extractor (LLM-assisted, human-reviewed) | ✅ |
 | 7 | Scottish income tax jurisdiction | ✅ |
-| 8 | Integration guide for later-life-planner | ⏳ |
+| 8 | Integration guide for later-life-planner | ✅ |
 
 ## Design Principles
 
@@ -118,6 +118,18 @@ Every rule passes 6 stages before publication:
 - **Human review gate** — required before any rule is published
 - **HMRC citations** — every rule entry must reference source URLs
 - **MCP transport** — stdio (local); HTTP SSE can be added later
+
+## Integration
+
+See **[`docs/integration/later-life-planner.md`](docs/integration/later-life-planner.md)**
+for a full guide on wiring this server into `later-life-planner`, including:
+
+- Architecture overview and transport setup
+- Replacing `financialConstants.ts` with `tax.get_rule_snapshot` + `execute_rule`
+- Checksum verification pattern (TypeScript)
+- Scottish taxpayer handling (jurisdiction field, 6-band income tax)
+- Agent-driven explanation and audit trace workflows
+- `/api/mcp` proxy route with security allowlist
 
 ## HMRC Source References
 

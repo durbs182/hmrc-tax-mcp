@@ -73,8 +73,17 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain UK tax strateg
 - [x] Worked examples for Scotland income_tax_bands (7 cases) and pa_taper (5 cases)
 - [x] 33 new tests (`test_scotland_rules.py`); **254 total tests passing**
 
-### Phase 8 — Integration
-- [ ] `integration-docs` — Integration guide: how later-life-planner calls the MCP tools
+### Phase 8 — Integration ✅
+- [x] `integration-docs` — `docs/integration/later-life-planner.md`: full integration guide
+  - Architecture diagram (projectionEngine + AI agent → MCP server)
+  - Running the server (stdio transport, MCP client config)
+  - Replacing `financialConstants.ts` with `tax.get_rule_snapshot` + `execute_rule`
+  - Checksum verification pattern (TypeScript)
+  - Scottish taxpayer handling: jurisdiction field in plan model, 6-band income tax table
+  - Agent-driven explanation workflows (trace_execution, validate_rule, extract_rule)
+  - `/api/mcp` proxy route with security allowlist (extract_rule blocked from browser)
+  - Full projection call sequence worked example (Scottish £35k taxpayer)
+  - Roadmap for future rules (2026-27, Wales, NI, MPAA, tapered AA)
 
 ---
 
