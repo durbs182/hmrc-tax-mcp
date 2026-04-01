@@ -284,7 +284,7 @@ class TestEndToEnd:
 
     def test_stored_ast_diverges_from_dsl_fails_stage3(self) -> None:
         """Stage 3 must fail when rule.ast was tampered but dsl_source is intact."""
-        from hmrc_tax_mcp.ast.canonical import canonicalise, ast_checksum
+        from hmrc_tax_mcp.ast.canonical import ast_checksum
 
         rule = _rule_dict("cgt_exempt")
         # Replace stored AST with a different valid AST (different constant value)

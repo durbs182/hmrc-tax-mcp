@@ -254,7 +254,9 @@ class Evaluator:
                 if isinstance(value, bool) or not isinstance(value, Decimal):
                     raise EvaluationError("round(): first argument must be a number")
                 if isinstance(places, bool) or not isinstance(places, Decimal):
-                    raise EvaluationError("round(): second argument (decimal places) must be a number")
+                    raise EvaluationError(
+                        "round(): second argument (decimal places) must be a number"
+                    )
                 from decimal import ROUND_HALF_UP
                 quantizer = Decimal(10) ** -int(places)
                 result = value.quantize(quantizer, rounding=ROUND_HALF_UP)

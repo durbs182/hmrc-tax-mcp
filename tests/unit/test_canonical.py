@@ -103,8 +103,9 @@ class TestLetBindingOrder:
         assert ast_checksum(ast1) == ast_checksum(ast2)
 
     def test_bindings_are_ordered_list(self) -> None:
-        from hmrc_tax_mcp.ast.canonical import canonicalise
         import json
+
+        from hmrc_tax_mcp.ast.canonical import canonicalise
         ast = self._let_ast(["a", "b"])
         canonical = json.loads(canonicalise(ast))
         # bindings are already a list in the schema; canonical preserves order
