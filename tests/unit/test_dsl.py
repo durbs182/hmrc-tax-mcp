@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 
 from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl
-from hmrc_tax_mcp.dsl.parser import ParseError, parse
+from hmrc_tax_mcp.dsl.parser import ParseError
 from hmrc_tax_mcp.evaluator import Evaluator
 
 

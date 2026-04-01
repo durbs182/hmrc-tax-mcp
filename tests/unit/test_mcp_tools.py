@@ -10,16 +10,13 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from typing import Any
-from unittest.mock import AsyncMock, patch
 
-import pytest
+from hmrc_tax_mcp.evaluator import Evaluator
 
 # Import handler internals that work without the MCP runtime
 from hmrc_tax_mcp.explainer import explain_rule
-from hmrc_tax_mcp.evaluator import Evaluator
 from hmrc_tax_mcp.registry.store import get_rule, list_rules
 from hmrc_tax_mcp.validation.pipeline import validate_rule
-
 
 # ---------------------------------------------------------------------------
 # Helpers — replicate the server's logic without the MCP runtime

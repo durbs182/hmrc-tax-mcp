@@ -21,9 +21,10 @@ except ImportError:
     _MCP_AVAILABLE = False
 
 from hmrc_tax_mcp.ast.canonical import ast_checksum
-from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl as _compile_dsl
+from hmrc_tax_mcp.dsl.compiler import CompileError
+from hmrc_tax_mcp.dsl.compiler import compile_dsl as _compile_dsl
 from hmrc_tax_mcp.dsl.tokenizer import TokenizeError
-from hmrc_tax_mcp.evaluator import Evaluator, EvaluationError
+from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
 from hmrc_tax_mcp.explainer import explain_rule as _explain_rule
 from hmrc_tax_mcp.extractor.nl_extractor import NLExtractor
 from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
@@ -56,7 +57,11 @@ async def handle_list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "rule_id": {"type": "string", "description": "e.g. 'pa.taper.2025-26'"},
-                    "version": {"type": "string", "description": "Semver or 'latest'", "default": "latest"},
+                    "version": {
+                        "type": "string",
+                        "description": "Semver or 'latest'",
+                        "default": "latest",
+                    },
                 },
                 "required": ["rule_id"],
             },
@@ -74,7 +79,7 @@ async def handle_list_tools() -> list[Tool]:
                     "version": {"type": "string", "default": "latest"},
                     "inputs": {
                         "type": "object",
-                        "description": "Variable bindings for the rule, e.g. {'adjusted_net_income': 110000}",
+                        "description": "Variable bindings, e.g. {'adjusted_net_income': 110000}",
                     },
                     "trace": {
                         "type": "boolean",
@@ -99,7 +104,9 @@ async def handle_list_tools() -> list[Tool]:
         ),
         Tool(
             name="compile_dsl",
-            description="Compile DSL text to a canonical AST, returning the AST and its SHA-256 checksum.",
+            description=(
+                "Compile DSL text to a canonical AST, returning the AST and its SHA-256 checksum."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -120,7 +127,7 @@ async def handle_list_tools() -> list[Tool]:
                 "properties": {
                     "rule_id": {
                         "type": "string",
-                        "description": "Rule ID to validate from the registry (e.g. 'income_tax_bands')",
+                        "description": "Rule ID to validate (e.g. 'income_tax_bands')",
                     },
                     "version": {"type": "string", "default": "latest"},
                 },
@@ -137,7 +144,10 @@ async def handle_list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "rule_id": {"type": "string", "description": "Rule ID (e.g. 'income_tax_bands')"},
+                    "rule_id": {
+                        "type": "string",
+                        "description": "Rule ID (e.g. 'income_tax_bands')",
+                    },
                     "version": {"type": "string", "default": "latest"},
                 },
                 "required": ["rule_id"],
@@ -176,7 +186,7 @@ async def handle_list_tools() -> list[Tool]:
                 "properties": {
                     "hmrc_text": {
                         "type": "string",
-                        "description": "Verbatim HMRC legislative or guidance text to convert to DSL.",
+                        "description": "Verbatim HMRC legislative text to convert to DSL.",
                     },
                     "model": {
                         "type": "string",

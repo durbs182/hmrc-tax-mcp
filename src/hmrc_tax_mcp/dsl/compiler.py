@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from hmrc_tax_mcp.dsl.parser import ParseError, parse
+from hmrc_tax_mcp.dsl.parser import parse
 
 
 class CompileError(Exception):

@@ -41,7 +41,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from hmrc_tax_mcp.dsl.tokenizer import Token, TokenizeError, tokenize
+from hmrc_tax_mcp.dsl.tokenizer import Token, tokenize
 
 
 class ParseError(Exception):
@@ -250,9 +250,9 @@ class Parser:
             if self._peek() and self._peek().kind == "PUNCT" and self._peek().value == "(":  # type: ignore[union-attr]
                 self._advance()  # consume "("
                 args: list[dict[str, Any]] = []
-                if not (self._peek() and self._peek().kind == "PUNCT" and self._peek().value == ")"):  # type: ignore[union-attr]
+                if not ((peek := self._peek()) and peek.kind == "PUNCT" and peek.value == ")"):
                     args.append(self._parse_expr())
-                    while self._peek() and self._peek().kind == "PUNCT" and self._peek().value == ",":  # type: ignore[union-attr]
+                    while (peek := self._peek()) and peek.kind == "PUNCT" and peek.value == ",":
                         self._advance()
                         args.append(self._parse_expr())
                 self._expect("PUNCT", ")")
@@ -336,7 +336,11 @@ class Parser:
 
         while True:
             tok = self._peek()
-            if tok is None or tok.kind != "IDENT" or tok.value not in ("threshold", "ratio", "base"):
+            if (
+                tok is None
+                or tok.kind != "IDENT"
+                or tok.value not in ("threshold", "ratio", "base")
+            ):
                 break
             key = self._advance().value
 
@@ -346,13 +350,17 @@ class Parser:
                 if self._peek() and self._peek().kind == "IDENT" and self._peek().value == "per":  # type: ignore[union-attr]
                     self._advance()  # consume "per"
                     denom_tok = self._expect("NUMBER")
-                    denom = float(denom_tok.value) if "." in denom_tok.value else int(denom_tok.value)
+                    denom = (
+                        float(denom_tok.value) if "." in denom_tok.value else int(denom_tok.value)
+                    )
                     ratio = {"node": "CONST", "value": num / denom}
                 else:
                     ratio = {"node": "CONST", "value": num}
             else:
                 val_tok = self._expect("NUMBER")
-                val: int | float = int(val_tok.value) if "." not in val_tok.value else float(val_tok.value)
+                val: int | float = (
+                    int(val_tok.value) if "." not in val_tok.value else float(val_tok.value)
+                )
                 if key == "threshold":
                     threshold = {"node": "CONST", "value": val}
                 else:
