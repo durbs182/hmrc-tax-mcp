@@ -227,9 +227,26 @@ class Evaluator:
             fn = node["name"]
             args = [self.eval(a, depth + 1) for a in node["args"]]
             if fn == "percent":
+                if len(args) != 2:
+                    raise EvaluationError("percent(): requires exactly 2 arguments (value, rate)")
                 if not isinstance(args[0], Decimal) or not isinstance(args[1], Decimal):
                     raise EvaluationError("percent(): args must be numbers")
                 result = args[0] * (args[1] / Decimal("100"))
+                self._record(t, {"fn": fn, "args": args}, result)
+                return result
+            if fn == "round":
+                # round(value, decimal_places) — explicit rounding for UK tax computations.
+                # UK self-assessment typically rounds income tax to the nearest penny.
+                if len(args) != 2:
+                    raise EvaluationError("round(): requires exactly 2 arguments (value, places)")
+                value, places = args[0], args[1]
+                if isinstance(value, bool) or not isinstance(value, Decimal):
+                    raise EvaluationError("round(): first argument must be a number")
+                if isinstance(places, bool) or not isinstance(places, Decimal):
+                    raise EvaluationError("round(): second argument (decimal places) must be a number")
+                from decimal import ROUND_HALF_UP
+                quantizer = Decimal(10) ** -int(places)
+                result = value.quantize(quantizer, rounding=ROUND_HALF_UP)
                 self._record(t, {"fn": fn, "args": args}, result)
                 return result
             raise EvaluationError(f"Unknown function: {fn!r}")

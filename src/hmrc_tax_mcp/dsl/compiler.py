@@ -129,7 +129,7 @@ def _compile_expr(expr: dict[str, Any]) -> dict[str, Any]:
 
     # CALL
     if node == "CALL":
-        _allowed_fns = {"percent"}
+        _allowed_fns = {"percent", "round"}
         if expr["name"] not in _allowed_fns:
             raise CompileError(
                 f"Unknown function {expr['name']!r}. Allowed: {sorted(_allowed_fns)}"
