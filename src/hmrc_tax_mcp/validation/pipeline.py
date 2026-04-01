@@ -42,14 +42,25 @@ _REQUIRED_FIELDS = {
 _VALID_PROVENANCES = {"manual", "nl_extracted", "migrated"}
 
 
-def _has_round_call(ast: Any) -> bool:
-    """Return True if the AST contains at least one CALL node with name 'round'."""
-    if isinstance(ast, dict):
-        if ast.get("node") == "CALL" and ast.get("name") == "round":
-            return True
-        return any(_has_round_call(v) for v in ast.values())
-    if isinstance(ast, list):
-        return any(_has_round_call(item) for item in ast)
+def _final_result_is_rounded(ast: Any) -> bool:
+    """Return True if the effective result of the AST is wrapped in round().
+
+    Traverses LET bodies and IF branches so that wrapping patterns like
+    ``let x = … in round(x, 2)`` are recognised. For IF nodes, both branches
+    must be rounded.
+    """
+    if not isinstance(ast, dict):
+        return False
+    node = ast.get("node")
+    if node == "CALL" and ast.get("name") == "round":
+        return True
+    if node == "LET":
+        return _final_result_is_rounded(ast.get("body"))
+    if node == "IF":
+        return (
+            _final_result_is_rounded(ast.get("then"))
+            and _final_result_is_rounded(ast.get("else") or ast.get("else_"))
+        )
     return False
 
 
@@ -166,14 +177,14 @@ def _stage_semantic(rule: dict[str, Any]) -> ValidationResult:
 
     if rule.get("monetary_output"):
         ast = rule.get("ast") or {}
-        if not _has_round_call(ast):
+        if not _final_result_is_rounded(ast):
             return ValidationResult(
                 stage=ValidationStage.SEMANTIC,
                 passed=False,
                 message=(
-                    "Rule declares monetary_output=true but the AST contains no "
-                    "round() call. Wrap the final result in round(expr, 2) per the "
-                    "rounding policy (docs/rules/rounding-policy.md)."
+                    "Rule declares monetary_output=true but the final result is not "
+                    "wrapped in round(). Wrap the outermost expression in round(expr, 2) "
+                    "per the rounding policy (docs/rules/rounding-policy.md)."
                 ),
             )
 
