@@ -1,0 +1,155 @@
+name: Security Scans
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: security-scans-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: 'false'
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: 'false'
+
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    container:
+      image: semgrep/semgrep:1.155.0
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Semgrep
+        id: scan
+        shell: sh
+        env:
+          SEMGREP_SEND_METRICS: 'off'
+        run: |
+          set +e
+          semgrep scan \
+            --config p/python \
+            --config .semgrep/hmrc-tax-mcp.yml \
+            --error \
+            --sarif \
+            --output semgrep.sarif
+          status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload SARIF
+        if: ${{ always() && hashFiles('semgrep.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+      - name: Summarize Semgrep SARIF
+        if: ${{ always() && hashFiles('semgrep.sarif') != '' }}
+        id: summarize
+        shell: sh
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          sarif = json.loads(Path("semgrep.sarif").read_text())
+          runs = sarif.get("runs", [])
+          findings_count = sum(len(run.get("results", [])) for run in runs)
+          notifications = []
+          for run in runs:
+            for invocation in run.get("invocations", []):
+              notifications.extend(invocation.get("toolExecutionNotifications", []))
+
+          tool_error_count = sum(1 for item in notifications if (item.get("level") or "") == "error")
+          tool_warning_count = sum(
+            1 for item in notifications if (item.get("level") or "") == "warning"
+          )
+
+          for item in notifications:
+            level = item.get("level") or "unknown"
+            message = (
+              item.get("message", {}).get("text")
+              or item.get("message", {}).get("markdown")
+              or "no message"
+            )
+            print(f"[{level}] {message}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
+            handle.write(f"findings_count={findings_count}\n")
+            handle.write(f"tool_error_count={tool_error_count}\n")
+            handle.write(f"tool_warning_count={tool_warning_count}\n")
+          PY
+
+      - name: Fail on Semgrep findings
+        shell: sh
+        run: |
+          if [ ! -f semgrep.sarif ]; then
+            echo "::error::Semgrep did not produce a SARIF report."
+            exit 1
+          fi
+
+          case "${{ steps.scan.outputs.exit_code }}" in
+            0|1)
+              ;;
+            *)
+              echo "::error::Semgrep exited unexpectedly with code ${{ steps.scan.outputs.exit_code }}."
+              exit 1
+              ;;
+          esac
+
+          if [ "${{ steps.summarize.outputs.tool_error_count }}" != "0" ]; then
+            echo "::error::Semgrep reported tool errors in SARIF."
+            exit 1
+          fi
+
+          if [ "${{ steps.summarize.outputs.findings_count }}" != "0" ]; then
+            echo "::error::Semgrep found blocking findings."
+            exit 1
+          fi
+
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Install actionlint
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL \
+            -o actionlint.tar.gz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.11/actionlint_1.7.11_linux_amd64.tar.gz
+          echo "900919a84f2229bac68ca9cd4103ea297abc35e9689ebb842c6e34a3d1b01b0a  actionlint.tar.gz" | sha256sum -c -
+          tar -xzf actionlint.tar.gz actionlint
+          sudo mv actionlint /usr/local/bin/actionlint
+
+      - name: Run actionlint
+        run: actionlint -color

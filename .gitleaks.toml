@@ -1,0 +1,12 @@
+title = "HMRC Tax MCP Gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "hardcoded-db-uri"
+description = "Hardcoded database URI with embedded credentials"
+regex = '''(?i)\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis):\/\/[A-Za-z0-9._%+-]{1,80}:[^@\s'"]{6,200}@[^'"\s]+'''
+secretGroup = 0
+keywords = ["postgres://", "postgresql://", "mysql://", "mongodb://", "mongodb+srv://", "redis://"]
+tags = ["database", "credentials", "hardcoded"]
