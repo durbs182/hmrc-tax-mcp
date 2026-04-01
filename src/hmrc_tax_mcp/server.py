@@ -22,8 +22,10 @@ except ImportError:
 
 from hmrc_tax_mcp.ast.canonical import ast_checksum
 from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl as _compile_dsl
+from hmrc_tax_mcp.dsl.tokenizer import TokenizeError
 from hmrc_tax_mcp.evaluator import Evaluator, EvaluationError
 from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
+from hmrc_tax_mcp.validation.pipeline import validate_rule as _validate_rule
 
 app = Server("hmrc-tax-mcp") if _MCP_AVAILABLE else None  # type: ignore[assignment]
 
@@ -104,6 +106,25 @@ async def handle_list_tools() -> list[Tool]:
                 "required": ["dsl"],
             },
         ),
+        Tool(
+            name="validate_rule",
+            description=(
+                "Run the 6-stage validation pipeline on a rule (by ID or as a raw dict). "
+                "Returns pass/fail per stage: syntax, semantic, canonicalisation, "
+                "execution, worked_examples, human_review."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "rule_id": {
+                        "type": "string",
+                        "description": "Rule ID to validate from the registry (e.g. 'income_tax_bands')",
+                    },
+                    "version": {"type": "string", "default": "latest"},
+                },
+                "required": ["rule_id"],
+            },
+        ),
     ]
 
 
@@ -170,8 +191,29 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             ast_node = _compile_dsl(dsl_src)
             checksum = ast_checksum(ast_node)
             return [TextContent(type="text", text=_json({"ast": ast_node, "checksum": checksum}))]
-        except CompileError as exc:
+        except (CompileError, TokenizeError) as exc:
             return [TextContent(type="text", text=_json({"error": str(exc)}))]
+
+    if name == "validate_rule":
+        rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"))
+        if rule is None:
+            return [TextContent(type="text", text=_json({"error": "Rule not found"}))]
+        results = _validate_rule(rule.model_dump())
+        data = {
+            "rule_id": rule.rule_id,
+            "version": rule.version,
+            "stages": [
+                {
+                    "stage": r.stage.value,
+                    "passed": r.passed,
+                    "message": r.message,
+                    "details": r.details,
+                }
+                for r in results
+            ],
+            "overall": all(r.passed for r in results),
+        }
+        return [TextContent(type="text", text=_json(data))]
 
     return [TextContent(type="text", text=_json({"error": f"Unknown tool: {name!r}"}))]
 

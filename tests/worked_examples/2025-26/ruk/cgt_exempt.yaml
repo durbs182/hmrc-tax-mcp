@@ -1,0 +1,4 @@
+examples:
+  - description: "Annual exempt amount is £3,000"
+    inputs: {}
+    expected: 3000

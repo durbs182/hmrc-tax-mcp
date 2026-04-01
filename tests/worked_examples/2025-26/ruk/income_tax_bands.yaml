@@ -1,0 +1,30 @@
+examples:
+  - description: "Basic-rate taxpayer £30,000 taxable income → £3,486 tax"
+    inputs:
+      taxable_income: 30000
+    expected: 3486
+
+  - description: "Higher-rate taxpayer £60,000 taxable income → £11,432 tax"
+    inputs:
+      taxable_income: 60000
+    expected: 11432
+
+  - description: "Additional-rate taxpayer £150,000 taxable income → £48,675 tax"
+    inputs:
+      taxable_income: 150000
+    expected: 48675
+
+  - description: "Zero income → zero tax"
+    inputs:
+      taxable_income: 0
+    expected: 0
+
+  - description: "Nil band limit (£12,570) → zero tax"
+    inputs:
+      taxable_income: 12570
+    expected: 0
+
+  - description: "Basic/higher boundary (£50,270) → £7,540"
+    inputs:
+      taxable_income: 50270
+    expected: 7540

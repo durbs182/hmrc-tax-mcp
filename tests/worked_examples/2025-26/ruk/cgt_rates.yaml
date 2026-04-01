@@ -1,0 +1,10 @@
+examples:
+  - description: "Higher-rate taxpayer → 24% rate"
+    inputs:
+      is_higher_rate_taxpayer: true
+    expected: 24
+
+  - description: "Basic-rate taxpayer → 18% rate"
+    inputs:
+      is_higher_rate_taxpayer: false
+    expected: 18

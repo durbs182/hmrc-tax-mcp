@@ -1,0 +1,5 @@
+examples:
+  - description: "Full new state pension 2025-26 is £11,502.40/year (£221.20/week × 52)"
+    inputs: {}
+    expected: 11502.40
+    tolerance: "0.01"

@@ -1,0 +1,4 @@
+examples:
+  - description: "UFPLS taxable fraction is 75%"
+    inputs: {}
+    expected: 0.75

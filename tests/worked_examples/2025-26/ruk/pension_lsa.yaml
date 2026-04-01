@@ -1,0 +1,4 @@
+examples:
+  - description: "Lump Sum Allowance is £268,275"
+    inputs: {}
+    expected: 268275
