@@ -7,14 +7,12 @@ before being committed to the rule registry.
 
 Requires: pip install hmrc-tax-mcp[extractor]
 """
-
 from __future__ import annotations
 
 import json
 import os
 import textwrap
 from dataclasses import dataclass, field
-from typing import Optional
 
 _SYSTEM_PROMPT = textwrap.dedent("""\
     You are an expert UK tax engineer. Your task is to convert HMRC legislative
@@ -73,7 +71,7 @@ class ExtractionResult:
     jurisdiction: str
     citations: list[dict]
     raw_response: str
-    reviewed_by: Optional[str] = None  # Always None until a human signs off
+    reviewed_by: str | None = None  # Always None until a human signs off
     review_notes: str = ""
     warnings: list[str] = field(default_factory=list)
 
@@ -119,7 +117,7 @@ class NLExtractor:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         model: str = "claude-3-5-haiku-20241022",
         max_tokens: int = 1024,
     ) -> None:

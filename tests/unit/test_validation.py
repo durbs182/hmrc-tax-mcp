@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-import copy
-from decimal import Decimal
 from pathlib import Path
 from typing import Any
-
-import pytest
-import yaml
 
 from hmrc_tax_mcp.registry.store import get_rule, list_rules
 from hmrc_tax_mcp.validation.pipeline import (

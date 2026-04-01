@@ -8,9 +8,8 @@ from pathlib import Path
 import pytest
 
 from hmrc_tax_mcp.evaluator import Evaluator
-from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
+from hmrc_tax_mcp.registry.store import get_rule_snapshot, list_rules
 from hmrc_tax_mcp.validation.pipeline import load_worked_examples, validate_rule
-
 
 # ---------------------------------------------------------------------------
 # Registry — Scotland jurisdiction presence
@@ -19,7 +18,9 @@ from hmrc_tax_mcp.validation.pipeline import load_worked_examples, validate_rule
 class TestScotlandRegistry:
     def test_list_rules_includes_scotland_income_tax_bands(self) -> None:
         rules = list_rules()
-        found = [r for r in rules if r.rule_id == "income_tax_bands" and r.jurisdiction == "scotland"]
+        found = [
+            r for r in rules if r.rule_id == "income_tax_bands" and r.jurisdiction == "scotland"
+        ]
         assert len(found) >= 1
 
     def test_scotland_rules_have_correct_jurisdiction(self) -> None:
@@ -130,7 +131,7 @@ class TestScotlandIncomeTaxBands:
 
     def test_exactly_at_intermediate_upper_boundary(self) -> None:
         # At £43,662
-        # starter: 537.13, basic: 2418.80, intermediate: £43,662 - £27,491 = £16,171 at 21% = 3395.91
+        # starter: 537.13, basic: 2418.80, intermediate: (43662-27491)*21% = 3395.91
         # total = 6351.84
         assert _eval_scot_itb(Decimal("43662")) == Decimal("6351.84")
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from hmrc_tax_mcp.ast.canonical import ast_checksum, canonicalise, sha256_hash
 
-
 SIMPLE_AST = {"node": "CONST", "value": 12570}
 
 TAPER_AST = {

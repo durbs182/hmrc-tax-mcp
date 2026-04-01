@@ -18,7 +18,6 @@ from typing import Annotated, Any, Literal, Union
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Primitive nodes
 # ---------------------------------------------------------------------------
@@ -38,16 +37,16 @@ class VarNode(BaseModel):
 
 class LetNode(BaseModel):
     node: Literal["LET"]
-    bindings: dict[str, "ASTNode"]
-    body: "ASTNode"
+    bindings: dict[str, ASTNode]
+    body: ASTNode
     metadata: dict[str, Any] | None = None
 
 
 class IfNode(BaseModel):
     node: Literal["IF"]
-    cond: "ASTNode"
-    then: "ASTNode"
-    else_: "ASTNode" = Field(alias="else")
+    cond: ASTNode
+    then: ASTNode
+    else_: ASTNode = Field(alias="else")
     metadata: dict[str, Any] | None = None
 
     model_config = {"populate_by_name": True}
@@ -60,25 +59,25 @@ class IfNode(BaseModel):
 
 class AddNode(BaseModel):
     node: Literal["ADD"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class SubNode(BaseModel):
     node: Literal["SUB"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class MulNode(BaseModel):
     node: Literal["MUL"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class DivNode(BaseModel):
     node: Literal["DIV"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
@@ -89,37 +88,37 @@ class DivNode(BaseModel):
 
 class GtNode(BaseModel):
     node: Literal["GT"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class LtNode(BaseModel):
     node: Literal["LT"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class GteNode(BaseModel):
     node: Literal["GTE"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class LteNode(BaseModel):
     node: Literal["LTE"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class EqNode(BaseModel):
     node: Literal["EQ"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class NeqNode(BaseModel):
     node: Literal["NEQ"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
@@ -130,19 +129,19 @@ class NeqNode(BaseModel):
 
 class AndNode(BaseModel):
     node: Literal["AND"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class OrNode(BaseModel):
     node: Literal["OR"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
 class NotNode(BaseModel):
     node: Literal["NOT"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 
@@ -159,24 +158,24 @@ class TaxBand(BaseModel):
 
 class BandApplyNode(BaseModel):
     node: Literal["BAND_APPLY"]
-    args: list["ASTNode"]
+    args: list[ASTNode]
     bands: list[TaxBand]
     metadata: dict[str, Any] | None = None
 
 
 class TaperNode(BaseModel):
     node: Literal["TAPER"]
-    args: list["ASTNode"]
-    threshold: "ASTNode"
-    ratio: "ASTNode"
-    base: "ASTNode"
+    args: list[ASTNode]
+    threshold: ASTNode
+    ratio: ASTNode
+    base: ASTNode
     metadata: dict[str, Any] | None = None
 
 
 class CallNode(BaseModel):
     node: Literal["CALL"]
     name: str
-    args: list["ASTNode"]
+    args: list[ASTNode]
     metadata: dict[str, Any] | None = None
 
 

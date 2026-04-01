@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from hmrc_tax_mcp.evaluator import Evaluator, EvaluationError
+from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
 
 
 def ev(ast: dict, vars: dict | None = None) -> Decimal | bool:

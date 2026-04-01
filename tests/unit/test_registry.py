@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-import pytest
-
 from hmrc_tax_mcp.evaluator import Evaluator
 from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
 

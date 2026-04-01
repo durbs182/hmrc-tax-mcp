@@ -27,7 +27,7 @@ import yaml
 from hmrc_tax_mcp.ast.canonical import ast_checksum as _compute_ast_checksum
 from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl
 from hmrc_tax_mcp.dsl.tokenizer import TokenizeError
-from hmrc_tax_mcp.evaluator import Evaluator, EvaluationError
+from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
 
 # ---------------------------------------------------------------------------
 # Public types
@@ -131,7 +131,9 @@ def _stage_semantic(rule: dict[str, Any]) -> ValidationResult:
         return ValidationResult(
             stage=ValidationStage.SEMANTIC,
             passed=False,
-            message=f"Invalid provenance {provenance!r}; must be one of {sorted(_VALID_PROVENANCES)}",
+            message=(
+                f"Invalid provenance {provenance!r}; must be one of {sorted(_VALID_PROVENANCES)}"
+            ),
         )
 
     citations = rule.get("citations") or []

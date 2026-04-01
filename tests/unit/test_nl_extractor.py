@@ -9,14 +9,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from hmrc_tax_mcp.ast.canonical import ast_checksum
+from hmrc_tax_mcp.dsl.compiler import compile_dsl
 from hmrc_tax_mcp.extractor.nl_extractor import (
     ExtractionResult,
     NLExtractor,
     _parse_response,
 )
-from hmrc_tax_mcp.dsl.compiler import compile_dsl
-from hmrc_tax_mcp.ast.canonical import ast_checksum
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -195,7 +194,11 @@ class TestNLExtractorExtract:
         with patch.object(extractor, "_client", return_value=mock_client):
             extractor.extract("HMRC says X.")
         call_kwargs = mock_client.messages.create.call_args
-        messages = call_kwargs.kwargs.get("messages") or call_kwargs.args[0] if call_kwargs.args else []
+        messages = (
+            call_kwargs.kwargs.get("messages") or call_kwargs.args[0]
+            if call_kwargs.args
+            else []
+        )
         if not messages:
             messages = call_kwargs[1].get("messages", [])
         assert any("HMRC says X." in str(m) for m in messages)
@@ -222,10 +225,9 @@ def _json(data: Any) -> str:
 def tool_extract_rule(hmrc_text: str, model: str = "claude-3-5-haiku-20241022",
                       mock_response: str = _VALID_RESPONSE) -> dict:
     """Replicate the server's extract_rule handler logic without MCP runtime."""
-    from hmrc_tax_mcp.extractor.nl_extractor import NLExtractor
-    from hmrc_tax_mcp.dsl.compiler import compile_dsl, CompileError
+    from hmrc_tax_mcp.dsl.compiler import CompileError
     from hmrc_tax_mcp.dsl.tokenizer import TokenizeError
-    from hmrc_tax_mcp.ast.canonical import ast_checksum
+    from hmrc_tax_mcp.extractor.nl_extractor import NLExtractor
 
     extractor = NLExtractor(model=model, api_key="test-key")
     mock_client = _mock_anthropic(mock_response)
