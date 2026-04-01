@@ -260,8 +260,17 @@ class Evaluator:
                     raise EvaluationError(
                         "round(): second argument (decimal places) must be a number"
                     )
+                if places != places.to_integral_value():
+                    raise EvaluationError(
+                        "round(): decimal places must be an integer-valued number"
+                    )
+                places_int = int(places)
+                if places_int < 0:
+                    raise EvaluationError(
+                        "round(): decimal places must be non-negative"
+                    )
                 from decimal import ROUND_HALF_UP
-                quantizer = Decimal(10) ** -int(places)
+                quantizer = Decimal(10) ** -places_int
                 result = value.quantize(quantizer, rounding=ROUND_HALF_UP)
                 self._record(t, {"fn": fn, "args": args}, result)
                 return result

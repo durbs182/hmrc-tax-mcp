@@ -366,3 +366,28 @@ class TestLetSequential:
         })
         with pytest.raises(EvaluationError, match="Unknown variable"):
             evaluator.eval({"node": "VAR", "name": "inner"})
+
+
+class TestRoundPlacesValidation:
+    """round() must reject non-integer or negative places arguments."""
+
+    def test_non_integer_places_raises(self) -> None:
+        with pytest.raises(EvaluationError, match="integer-valued"):
+            ev({"node": "CALL", "name": "round", "args": [
+                {"node": "CONST", "value": 3.14},
+                {"node": "CONST", "value": 2.9},
+            ]})
+
+    def test_negative_places_raises(self) -> None:
+        with pytest.raises(EvaluationError, match="non-negative"):
+            ev({"node": "CALL", "name": "round", "args": [
+                {"node": "CONST", "value": 1234},
+                {"node": "CONST", "value": -1},
+            ]})
+
+    def test_zero_places_accepted(self) -> None:
+        result = ev({"node": "CALL", "name": "round", "args": [
+            {"node": "CONST", "value": 2.5},
+            {"node": "CONST", "value": 0},
+        ]})
+        assert result == Decimal("3")
