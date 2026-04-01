@@ -42,6 +42,17 @@ _REQUIRED_FIELDS = {
 _VALID_PROVENANCES = {"manual", "nl_extracted", "migrated"}
 
 
+def _has_round_call(ast: Any) -> bool:
+    """Return True if the AST contains at least one CALL node with name 'round'."""
+    if isinstance(ast, dict):
+        if ast.get("node") == "CALL" and ast.get("name") == "round":
+            return True
+        return any(_has_round_call(v) for v in ast.values())
+    if isinstance(ast, list):
+        return any(_has_round_call(item) for item in ast)
+    return False
+
+
 class ValidationStage(str, Enum):
     SYNTAX = "syntax"
     SEMANTIC = "semantic"
@@ -151,6 +162,19 @@ def _stage_semantic(rule: dict[str, Any]) -> ValidationResult:
                 passed=False,
                 message=f"Citation {i} missing 'label' or 'url'",
                 details={"citation_index": i, "citation": cit},
+            )
+
+    if rule.get("monetary_output"):
+        ast = rule.get("ast") or {}
+        if not _has_round_call(ast):
+            return ValidationResult(
+                stage=ValidationStage.SEMANTIC,
+                passed=False,
+                message=(
+                    "Rule declares monetary_output=true but the AST contains no "
+                    "round() call. Wrap the final result in round(expr, 2) per the "
+                    "rounding policy (docs/rules/rounding-policy.md)."
+                ),
             )
 
     return ValidationResult(

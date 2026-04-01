@@ -297,3 +297,38 @@ class TestEndToEnd:
         results = validate_rule(rule)
         # Stage 3 should detect that stored AST diverges from recompiled DSL AST
         assert not results[2].passed, "Stage 3 should fail when stored AST diverges from DSL"
+
+
+# ---------------------------------------------------------------------------
+# Rounding policy enforcement (monetary_output) — issue 2 from re-review
+# ---------------------------------------------------------------------------
+
+class TestRoundingPolicyEnforcement:
+    """Stage 2 must fail if monetary_output=True but no round() in the AST."""
+
+    def test_monetary_rule_without_round_fails_stage2(self) -> None:
+        rule = _rule_dict("income_tax_bands")
+        rule["monetary_output"] = True
+        # income_tax_bands AST is BAND_APPLY — no round() call
+        results = validate_rule(rule)
+        assert not results[1].passed
+        assert "round()" in results[1].message or "round" in results[1].message.lower()
+
+    def test_non_monetary_rule_without_round_passes_stage2(self) -> None:
+        rule = _rule_dict("income_tax_bands")
+        rule["monetary_output"] = False  # default
+        results = validate_rule(rule)
+        assert results[1].passed
+
+    def test_monetary_rule_with_round_passes_stage2(self) -> None:
+        """A monetary rule that wraps its result in round() should pass."""
+        rule = _rule_dict("income_tax_bands")
+        rule["monetary_output"] = True
+        # Wrap AST in a round(…, 2) CALL node
+        rule["ast"] = {
+            "node": "CALL",
+            "name": "round",
+            "args": [rule["ast"], {"node": "CONST", "value": 2}],
+        }
+        results = validate_rule(rule)
+        assert results[1].passed, results[1].message
