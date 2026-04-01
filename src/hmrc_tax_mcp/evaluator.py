@@ -182,7 +182,10 @@ class Evaluator:
             return bool_result
 
         if t == "NEG":
-            val = self.eval(node["args"][0], depth + 1)
+            args = node.get("args")
+            if not isinstance(args, list) or len(args) != 1:
+                raise EvaluationError("NEG: expected exactly 1 argument")
+            val = self.eval(args[0], depth + 1)
             if isinstance(val, bool):
                 raise EvaluationError("NEG: cannot negate a boolean")
             if not isinstance(val, Decimal):
