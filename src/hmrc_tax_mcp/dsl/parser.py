@@ -205,6 +205,9 @@ class Parser:
         if self._peek() and self._peek().kind == "IDENT" and self._peek().value == "not":  # type: ignore[union-attr]
             self._advance()
             return {"node": "NOT", "args": [self._parse_unary()]}
+        if self._peek() and self._peek().kind == "OP" and self._peek().value == "-":  # type: ignore[union-attr]
+            self._advance()
+            return {"node": "NEG", "args": [self._parse_unary()]}
         return self._parse_primary()
 
     def _parse_primary(self) -> dict[str, Any]:

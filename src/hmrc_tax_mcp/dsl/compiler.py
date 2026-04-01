@@ -121,7 +121,7 @@ def _compile_expr(expr: dict[str, Any]) -> dict[str, Any]:
     # Arithmetic / logical / comparison nodes with "args" list
     if node in ("ADD", "SUB", "MUL", "DIV",
                 "GT", "LT", "GTE", "LTE", "EQ", "NEQ",
-                "AND", "OR", "NOT"):
+                "AND", "OR", "NOT", "NEG"):
         return {
             "node": node,
             "args": [_compile_expr(a) for a in expr["args"]],

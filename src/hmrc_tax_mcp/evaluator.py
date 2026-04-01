@@ -180,6 +180,16 @@ class Evaluator:
             self._record(t, {"val": val}, bool_result)
             return bool_result
 
+        if t == "NEG":
+            val = self.eval(node["args"][0], depth + 1)
+            if isinstance(val, bool):
+                raise EvaluationError("NEG: cannot negate a boolean")
+            if not isinstance(val, Decimal):
+                raise EvaluationError(f"NEG: argument must be a number, got {type(val).__name__!r}")
+            result = -val
+            self._record(t, {"val": val}, result)
+            return result
+
         # ------------------------------------------------------------------
         # Domain-specific: BAND_APPLY
         # ------------------------------------------------------------------
