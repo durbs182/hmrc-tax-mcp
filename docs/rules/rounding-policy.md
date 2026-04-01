@@ -16,8 +16,8 @@ when and how rounding must be applied in DSL rules and the evaluator.
 
 | Output type | Rounding requirement |
 |-------------|----------------------|
-| Tax liability (£) | Round down to nearest penny — use `round(result, 2)` |
-| Tax-free cash (25% UFPLS) | Round down to nearest penny — use `round(result, 2)` |
+| Tax liability (£) | `ROUND_HALF_UP` to nearest penny — use `round(result, 2)` |
+| Tax-free cash (25% UFPLS) | `ROUND_HALF_UP` to nearest penny — use `round(result, 2)` |
 | Personal allowance taper | No rounding; the taper formula produces whole pounds naturally |
 | Percentage of income | Round to 2 decimal places before further use if intermediate result feeds a band |
 | Band tax per slice | Round each slice result to 2 decimal places, sum, then round total to 2 decimal places |
