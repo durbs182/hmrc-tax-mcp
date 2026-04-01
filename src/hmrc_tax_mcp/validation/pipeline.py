@@ -161,7 +161,8 @@ def _stage_semantic(rule: dict[str, Any]) -> ValidationResult:
 
 
 def _stage_canonicalisation(rule: dict[str, Any]) -> ValidationResult:
-    """Stage 3: Recompile the DSL and verify checksum matches stored value."""
+    """Stage 3: Recompile the DSL and verify both the stored AST and the
+    recompiled AST produce the same checksum as the stored checksum."""
     dsl_source = rule.get("dsl_source", "")
     stored_checksum = rule.get("checksum", "")
 
@@ -179,9 +180,29 @@ def _stage_canonicalisation(rule: dict[str, Any]) -> ValidationResult:
         return ValidationResult(
             stage=ValidationStage.CANONICALISATION,
             passed=False,
-            message="Checksum mismatch: stored AST does not match recompiled DSL",
+            message="Checksum mismatch: recompiled DSL checksum differs from stored checksum",
             details={"stored": stored_checksum, "computed": computed},
         )
+
+    # Also verify the stored AST itself checksums to the same value.
+    # A tampered AST could pass the DSL-recompile check above while diverging
+    # from what the DSL actually describes.
+    stored_ast = rule.get("ast")
+    if stored_ast is not None:
+        stored_ast_checksum = _compute_ast_checksum(stored_ast)
+        if stored_ast_checksum != stored_checksum:
+            return ValidationResult(
+                stage=ValidationStage.CANONICALISATION,
+                passed=False,
+                message=(
+                    "Stored AST checksum does not match stored checksum — "
+                    "AST may have been tampered with independently of the DSL"
+                ),
+                details={
+                    "stored_checksum": stored_checksum,
+                    "stored_ast_checksum": stored_ast_checksum,
+                },
+            )
 
     return ValidationResult(
         stage=ValidationStage.CANONICALISATION,
