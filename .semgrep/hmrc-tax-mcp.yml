@@ -4,7 +4,7 @@ rules:
       - python
     severity: ERROR
     message: Hardcoded database URI with embedded credentials.
-    pattern-regex: '(?i)\b\w+\s*=\s*["''](?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis):\/\/[^"'']+["'']'
+    pattern-regex: '(?i)\b\w+\s*=\s*["''](?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^"'']+["'']'
 
   - id: hmrc-tax-mcp.python-inline-string-built-sql-query
     languages:
