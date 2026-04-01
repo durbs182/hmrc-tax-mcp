@@ -62,6 +62,10 @@ async def handle_list_tools() -> list[Tool]:
                         "description": "Semver or 'latest'",
                         "default": "latest",
                     },
+                    "jurisdiction": {
+                        "type": "string",
+                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                    },
                 },
                 "required": ["rule_id"],
             },
@@ -77,6 +81,10 @@ async def handle_list_tools() -> list[Tool]:
                 "properties": {
                     "rule_id": {"type": "string"},
                     "version": {"type": "string", "default": "latest"},
+                    "jurisdiction": {
+                        "type": "string",
+                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                    },
                     "inputs": {
                         "type": "object",
                         "description": "Variable bindings, e.g. {'adjusted_net_income': 110000}",
@@ -130,6 +138,10 @@ async def handle_list_tools() -> list[Tool]:
                         "description": "Rule ID to validate (e.g. 'income_tax_bands')",
                     },
                     "version": {"type": "string", "default": "latest"},
+                    "jurisdiction": {
+                        "type": "string",
+                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                    },
                 },
                 "required": ["rule_id"],
             },
@@ -149,6 +161,10 @@ async def handle_list_tools() -> list[Tool]:
                         "description": "Rule ID (e.g. 'income_tax_bands')",
                     },
                     "version": {"type": "string", "default": "latest"},
+                    "jurisdiction": {
+                        "type": "string",
+                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                    },
                 },
                 "required": ["rule_id"],
             },
@@ -165,6 +181,10 @@ async def handle_list_tools() -> list[Tool]:
                 "properties": {
                     "rule_id": {"type": "string"},
                     "version": {"type": "string", "default": "latest"},
+                    "jurisdiction": {
+                        "type": "string",
+                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                    },
                     "inputs": {
                         "type": "object",
                         "description": "Variable bindings, e.g. {'taxable_income': 50000}",
@@ -217,13 +237,27 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         return [TextContent(type="text", text=_json(data))]
 
     if name == "get_rule":
-        rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"))
+        try:
+            rule = get_rule(
+                arguments["rule_id"],
+                arguments.get("version", "latest"),
+                jurisdiction=arguments.get("jurisdiction"),
+            )
+        except ValueError as exc:
+            return [TextContent(type="text", text=_json({"error": str(exc)}))]
         if rule is None:
             return [TextContent(type="text", text=_json({"error": "Rule not found"}))]
         return [TextContent(type="text", text=_json(rule.model_dump(mode="json")))]
 
     if name == "execute_rule":
-        rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"))
+        try:
+            rule = get_rule(
+                arguments["rule_id"],
+                arguments.get("version", "latest"),
+                jurisdiction=arguments.get("jurisdiction"),
+            )
+        except ValueError as exc:
+            return [TextContent(type="text", text=_json({"error": str(exc)}))]
         if rule is None:
             return [TextContent(type="text", text=_json({"error": "Rule not found"}))]
         evaluator = Evaluator(
@@ -267,7 +301,14 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             return [TextContent(type="text", text=_json({"error": str(exc)}))]
 
     if name == "validate_rule":
-        rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"))
+        try:
+            rule = get_rule(
+                arguments["rule_id"],
+                arguments.get("version", "latest"),
+                jurisdiction=arguments.get("jurisdiction"),
+            )
+        except ValueError as exc:
+            return [TextContent(type="text", text=_json({"error": str(exc)}))]
         if rule is None:
             return [TextContent(type="text", text=_json({"error": "Rule not found"}))]
         results = _validate_rule(rule.model_dump())
@@ -288,14 +329,28 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         return [TextContent(type="text", text=_json(data))]
 
     if name == "explain_rule":
-        rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"))
+        try:
+            rule = get_rule(
+                arguments["rule_id"],
+                arguments.get("version", "latest"),
+                jurisdiction=arguments.get("jurisdiction"),
+            )
+        except ValueError as exc:
+            return [TextContent(type="text", text=_json({"error": str(exc)}))]
         if rule is None:
             return [TextContent(type="text", text=_json({"error": "Rule not found"}))]
         explanation = _explain_rule(rule.model_dump(mode="json"))
         return [TextContent(type="text", text=_json(explanation))]
 
     if name == "trace_execution":
-        rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"))
+        try:
+            rule = get_rule(
+                arguments["rule_id"],
+                arguments.get("version", "latest"),
+                jurisdiction=arguments.get("jurisdiction"),
+            )
+        except ValueError as exc:
+            return [TextContent(type="text", text=_json({"error": str(exc)}))]
         if rule is None:
             return [TextContent(type="text", text=_json({"error": "Rule not found"}))]
         evaluator = Evaluator(
