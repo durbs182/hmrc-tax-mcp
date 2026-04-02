@@ -292,3 +292,63 @@ def test_gia_disposal_gain_no_gain_when_at_cost() -> None:
         }
     ).eval(entry.ast)
     assert result == Decimal("0")
+
+
+# ---------------------------------------------------------------------------
+# Jurisdiction defaulting — rules that exist in both rUK and scotland
+# ---------------------------------------------------------------------------
+
+class TestJurisdictionDefault:
+    """
+    When jurisdiction is omitted for a rule that exists in multiple jurisdictions,
+    get_rule should silently default to rUK rather than raising ValueError.
+    """
+
+    def test_income_tax_bands_no_jurisdiction_returns_ruk(self) -> None:
+        entry = get_rule("income_tax_bands")
+        assert entry is not None
+        assert entry.jurisdiction == "rUK"
+
+    def test_pa_taper_no_jurisdiction_returns_ruk(self) -> None:
+        entry = get_rule("pa_taper")
+        assert entry is not None
+        assert entry.jurisdiction == "rUK"
+
+    def test_dividend_allowance_no_jurisdiction_returns_ruk(self) -> None:
+        entry = get_rule("dividend_allowance")
+        assert entry is not None
+        assert entry.jurisdiction == "rUK"
+
+    def test_savings_allowance_basic_no_jurisdiction_returns_ruk(self) -> None:
+        entry = get_rule("savings_allowance_basic")
+        assert entry is not None
+        assert entry.jurisdiction == "rUK"
+
+    def test_savings_allowance_higher_no_jurisdiction_returns_ruk(self) -> None:
+        entry = get_rule("savings_allowance_higher")
+        assert entry is not None
+        assert entry.jurisdiction == "rUK"
+
+    def test_explicit_scotland_jurisdiction_returns_scotland(self) -> None:
+        entry = get_rule("income_tax_bands", jurisdiction="scotland")
+        assert entry is not None
+        assert entry.jurisdiction == "scotland"
+
+    def test_explicit_ruk_jurisdiction_returns_ruk(self) -> None:
+        entry = get_rule("income_tax_bands", jurisdiction="rUK")
+        assert entry is not None
+        assert entry.jurisdiction == "rUK"
+
+    def test_specific_version_no_jurisdiction_returns_ruk(self) -> None:
+        """Specific version path also defaults to rUK when jurisdiction is omitted."""
+        ruk_entry = get_rule("income_tax_bands", jurisdiction="rUK")
+        assert ruk_entry is not None
+        entry = get_rule("income_tax_bands", version=ruk_entry.version)
+        assert entry is not None
+        assert entry.jurisdiction == "rUK"
+
+    def test_ruk_only_rule_unaffected(self) -> None:
+        """A rule that exists only in rUK is still returned without specifying jurisdiction."""
+        entry = get_rule("cgt_exempt")
+        assert entry is not None
+        assert entry.jurisdiction == "rUK"

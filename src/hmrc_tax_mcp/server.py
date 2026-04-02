@@ -64,7 +64,7 @@ async def handle_list_tools() -> list[Tool]:
                     },
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                 },
                 "required": ["rule_id"],
@@ -83,7 +83,7 @@ async def handle_list_tools() -> list[Tool]:
                     "version": {"type": "string", "default": "latest"},
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                     "inputs": {
                         "type": "object",
@@ -99,7 +99,7 @@ async def handle_list_tools() -> list[Tool]:
             },
         ),
         Tool(
-            name="tax.get_rule_snapshot",
+            name="tax_get_rule_snapshot",
             description="Return the complete rule set for a given tax year and jurisdiction.",
             inputSchema={
                 "type": "object",
@@ -140,7 +140,7 @@ async def handle_list_tools() -> list[Tool]:
                     "version": {"type": "string", "default": "latest"},
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                 },
                 "required": ["rule_id"],
@@ -163,7 +163,7 @@ async def handle_list_tools() -> list[Tool]:
                     "version": {"type": "string", "default": "latest"},
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                 },
                 "required": ["rule_id"],
@@ -183,7 +183,7 @@ async def handle_list_tools() -> list[Tool]:
                     "version": {"type": "string", "default": "latest"},
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                     "inputs": {
                         "type": "object",
@@ -282,7 +282,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             ]
         return [TextContent(type="text", text=_json(response))]
 
-    if name == "tax.get_rule_snapshot":
+    if name == "tax_get_rule_snapshot":
         rules = get_rule_snapshot(arguments["tax_year"], arguments["jurisdiction"])
         data = {  # type: ignore[assignment]
             "tax_year": arguments["tax_year"],

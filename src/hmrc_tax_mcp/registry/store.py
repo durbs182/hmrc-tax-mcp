@@ -72,11 +72,8 @@ def get_rule(
             and (jurisdiction is None or e.jurisdiction == jurisdiction)
         ]
         if len(matches) > 1 and jurisdiction is None:
-            jurisdictions = sorted({e.jurisdiction for e in matches})
-            raise ValueError(
-                f"Rule {rule_id!r} version {version!r} exists in multiple jurisdictions "
-                f"{jurisdictions}; pass jurisdiction= to disambiguate"
-            )
+            ruk_matches = [e for e in matches if e.jurisdiction == "rUK"]
+            matches = ruk_matches if ruk_matches else matches
         return matches[0] if matches else None
 
     matches = [
@@ -87,14 +84,15 @@ def get_rule(
     if not matches:
         return None
 
-    # Check for jurisdiction ambiguity before selecting latest version.
+    # When multiple jurisdictions match and none was specified, default to rUK.
+    # This prevents tools from failing when Copilot omits jurisdiction for
+    # shared rules (e.g. income_tax_bands, pa_taper). Callers that need
+    # Scottish rates should pass jurisdiction="scotland" explicitly.
     if jurisdiction is None:
         ambig_jurisdictions = {e.jurisdiction for e in matches}
         if len(ambig_jurisdictions) > 1:
-            raise ValueError(
-                f"Rule {rule_id!r} exists in multiple jurisdictions "
-                f"{sorted(ambig_jurisdictions)}; pass jurisdiction= to disambiguate"
-            )
+            ruk_matches = [e for e in matches if e.jurisdiction == "rUK"]
+            matches = ruk_matches if ruk_matches else matches
 
     return sorted(matches, key=lambda e: _semver_key(e.version))[-1]
 
