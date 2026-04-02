@@ -5,11 +5,12 @@ Implements the MCP stdio transport (Content-Length framing, JSON-RPC 2.0)
 and handles: initialize, tools/list, tools/call, notifications/*.
 """
 from __future__ import annotations
-import sys
+
 import json
+import sys
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 
 HTTP_ENDPOINT = "http://127.0.0.1:8000/call"
 
@@ -116,7 +117,7 @@ def read_message() -> dict | None:
 def write_message(obj: dict) -> None:
     s = json.dumps(obj, separators=(",", ":"), ensure_ascii=False)
     b = s.encode("utf-8")
-    sys.stdout.buffer.write(f"Content-Length: {len(b)}\r\n\r\n".encode("utf-8"))
+    sys.stdout.buffer.write(f"Content-Length: {len(b)}\r\n\r\n".encode())
     sys.stdout.buffer.write(b)
     sys.stdout.buffer.flush()
 

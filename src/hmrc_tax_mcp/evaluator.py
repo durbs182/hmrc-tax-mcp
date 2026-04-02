@@ -248,6 +248,13 @@ class Evaluator:
                 result = args[0] * (args[1] / Decimal("100"))
                 self._record(t, {"fn": fn, "args": args}, result)
                 return result
+            if fn in {"min", "max"}:
+                if len(args) != 2:
+                    raise EvaluationError(f"{fn}(): requires exactly 2 arguments")
+                dec_args = self._require_decimal_args(args, fn)
+                result = min(dec_args) if fn == "min" else max(dec_args)
+                self._record(t, {"fn": fn, "args": args}, result)
+                return result
             if fn == "round":
                 # round(value, decimal_places) — explicit rounding for UK tax computations.
                 # UK self-assessment typically rounds income tax to the nearest penny.

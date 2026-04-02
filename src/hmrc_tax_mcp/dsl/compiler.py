@@ -140,7 +140,7 @@ def _compile_expr(expr: dict[str, Any]) -> dict[str, Any]:
 
     # CALL
     if node == "CALL":
-        _fn_arities: dict[str, int] = {"percent": 2, "round": 2}
+        _fn_arities: dict[str, int] = {"percent": 2, "round": 2, "min": 2, "max": 2}
         fn_name = expr["name"]
         if fn_name not in _fn_arities:
             raise CompileError(

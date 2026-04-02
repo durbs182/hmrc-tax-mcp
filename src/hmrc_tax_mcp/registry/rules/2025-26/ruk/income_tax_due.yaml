@@ -1,0 +1,135 @@
+rule_id: income_tax_due
+version: "1.0.0"
+tax_year: "2025-26"
+jurisdiction: rUK
+title: Income Tax Due – Composite (rUK 2025-26)
+description: >
+  Calculates the total income tax liability for a given adjusted net income,
+  combining the personal allowance taper and the three rate bands in a single
+  rule. The personal allowance (£12,570) tapers by £1 per £2 above £100,000,
+  reaching £0 at £125,140. Taxable income is computed as adjusted net income
+  minus the effective personal allowance. The basic-rate band is always £37,700
+  wide (20%); the higher-rate band covers taxable income beyond that up to
+  £125,140 gross (40%); the additional-rate band covers income above £125,140
+  gross (45%). Result is rounded to the nearest penny. Input variable
+  `adjusted_net_income` is gross taxable income before the personal allowance.
+dsl_source: |
+  let effective_pa = taper adjusted_net_income:
+    threshold 100000
+    ratio 1 per 2
+    base 12570
+  let taxable_income = max(adjusted_net_income - effective_pa, 0)
+  let basic_band = min(taxable_income, 37700)
+  let higher_band = max(min(adjusted_net_income, 125140) - effective_pa - 37700, 0)
+  let additional_band = max(adjusted_net_income - 125140, 0)
+  return round(basic_band * 0.20 + higher_band * 0.40 + additional_band * 0.45, 2)
+ast:
+  node: LET
+  bindings:
+    - - effective_pa
+      - node: TAPER
+        args:
+          - node: VAR
+            name: adjusted_net_income
+        threshold:
+          node: CONST
+          value: 100000
+        ratio:
+          node: CONST
+          value: 0.5
+        base:
+          node: CONST
+          value: 12570
+    - - taxable_income
+      - node: CALL
+        name: max
+        args:
+          - node: SUB
+            args:
+              - node: VAR
+                name: adjusted_net_income
+              - node: VAR
+                name: effective_pa
+          - node: CONST
+            value: 0
+    - - basic_band
+      - node: CALL
+        name: min
+        args:
+          - node: VAR
+            name: taxable_income
+          - node: CONST
+            value: 37700
+    - - higher_band
+      - node: CALL
+        name: max
+        args:
+          - node: SUB
+            args:
+              - node: SUB
+                args:
+                  - node: CALL
+                    name: min
+                    args:
+                      - node: VAR
+                        name: adjusted_net_income
+                      - node: CONST
+                        value: 125140
+                  - node: VAR
+                    name: effective_pa
+              - node: CONST
+                value: 37700
+          - node: CONST
+            value: 0
+    - - additional_band
+      - node: CALL
+        name: max
+        args:
+          - node: SUB
+            args:
+              - node: VAR
+                name: adjusted_net_income
+              - node: CONST
+                value: 125140
+          - node: CONST
+            value: 0
+  body:
+    node: CALL
+    name: round
+    args:
+      - node: ADD
+        args:
+          - node: ADD
+            args:
+              - node: MUL
+                args:
+                  - node: VAR
+                    name: basic_band
+                  - node: CONST
+                    value: 0.2
+              - node: MUL
+                args:
+                  - node: VAR
+                    name: higher_band
+                  - node: CONST
+                    value: 0.4
+          - node: MUL
+            args:
+              - node: VAR
+                name: additional_band
+              - node: CONST
+                value: 0.45
+      - node: CONST
+        value: 2
+checksum: "34ae672c2c67165e466a5e8e63526e3c6ea8515f8514f5edbf6057cab5452144"
+citations:
+  - label: "HMRC – Income Tax rates and Personal Allowances"
+    url: "https://www.gov.uk/income-tax-rates"
+  - label: "HMRC – Tax rates 2025-26 (GOV.UK rates and allowances)"
+    url: "https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past"
+  - label: "ITA 2007 s.35 – Deduction of personal allowance"
+    url: "https://www.legislation.gov.uk/ukpga/2007/3/section/35"
+provenance: manual
+published_at: "2025-04-06T00:00:00Z"
+reviewed_by: null
+monetary_output: true
