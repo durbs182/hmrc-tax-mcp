@@ -60,3 +60,8 @@ ignore_errors = true
 # fastapi and pydantic are optional extras in the dev environment
 module = ["fastapi", "fastapi.*", "pydantic", "pydantic.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# http_dev is a dev-only FastAPI wrapper; its optional imports are environment-dependent
+module = ["hmrc_tax_mcp.http_dev"]
+ignore_errors = true
