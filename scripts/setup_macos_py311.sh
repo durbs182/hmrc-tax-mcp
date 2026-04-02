@@ -55,8 +55,14 @@ fi
 # Use the repo-local pyenv version
 pyenv local "$PY_VERSION"
 
-# Determine the pyenv python binary (fallback to system python3)
-PY_BIN="$(pyenv which python 2>/dev/null || true)"
+# Determine the pyenv python binary (prefer pyenv-installed version)
+PY_BIN=""
+if [ -d "$PYENV_ROOT/versions/$PY_VERSION" ]; then
+  PY_BIN="$PYENV_ROOT/versions/$PY_VERSION/bin/python"
+fi
+if [ -z "$PY_BIN" ]; then
+  PY_BIN="$(pyenv which python 2>/dev/null || true)"
+fi
 if [ -z "$PY_BIN" ]; then
   PY_BIN="$(command -v python3 || true)"
 fi
@@ -65,7 +71,7 @@ if [ -z "$PY_BIN" ]; then
   exit 1
 fi
 
-# 5) Create and activate virtualenv/venv using the pyenv python
+# 5) Create and activate virtualenv/venv using the chosen python
 if [ -d "$VENV_DIR" ]; then
   echo "Virtualenv $VENV_DIR already exists"
 else
@@ -80,6 +86,18 @@ source "$VENV_DIR/bin/activate"
 # Ensure pip comes from the venv python
 python -m pip install --upgrade pip
 
+# If the venv python is older than 3.10, print a warning and optionally install
+# eval_type_backport to help pydantic evaluate new typing syntax. This is a
+# fallback only; the recommended approach is to use Python >=3.10.
+VENV_PY="$VENV_DIR/bin/python"
+PY_MAJOR_MINOR=$($VENV_PY -c "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')")
+PY_MAJ=${PY_MAJOR_MINOR%%.*}
+PY_MIN=${PY_MAJOR_MINOR#*.}
+if [ "$PY_MAJ" -lt 3 ] || ( [ "$PY_MAJ" -eq 3 ] && [ "$PY_MIN" -lt 10 ] ); then
+  echo "Warning: venv Python is $PY_MAJOR_MINOR (<3.10). Pydantic v2 expects Python >=3.10."
+  echo "Attempting to install eval_type_backport into venv as a compatibility workaround..."
+  python -m pip install eval_type_backport || echo "eval_type_backport install failed; you may need to use Python >=3.10"
+fi
 # 6) Install project with server extras (mcp, click, etc.)
 echo "Installing project (server extras)..."
 set +e
