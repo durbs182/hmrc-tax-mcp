@@ -82,14 +82,31 @@ python -m pip install --upgrade pip
 
 # 6) Install project with server extras (mcp, click, etc.)
 echo "Installing project (server extras)..."
-python -m pip install -e '.[server]'
-
-# If system python3 is not available, the pyenv-installed python will be used
-# after 'pyenv local' above. Use 'python3' explicitly when creating the venv
-# to avoid "python: command not found" on macOS.
+set +e
+python -m pip install -e '.[server]' 2> /tmp/pip_server_install.err
+RC=$?
+set -e
+if [ $RC -eq 0 ]; then
+  echo "Installed project with [server] extras"
+else
+  echo "Failed to install with [server] extras. Inspect /tmp/pip_server_install.err for details"
+  # If failure was due to 'mcp' package not being available for the current Python,
+  # fall back to installing the core project and common server deps (excluding mcp).
+  if grep -q "mcp" /tmp/pip_server_install.err || grep -q "Could not find a version" /tmp/pip_server_install.err; then
+    echo "Falling back: install core package and known server deps (excluding mcp)."
+    python -m pip install -e .
+    python -m pip install click || true
+    python -m pip install fastapi || true
+    python -m pip install "uvicorn[standard]" || true
+    echo "WARNING: 'mcp' could not be installed automatically.\nIf you need the MCP stdio server, install 'mcp' manually (e.g., pip install mcp or pip install git+https://github.com/your-org/mcp.git).\nOtherwise, run the HTTP dev server with uvicorn for testing."
+  else
+    echo "pip install failed for an unexpected reason. See /tmp/pip_server_install.err"
+    exit 1
+  fi
+fi
 
 # 7) (Optional) install uvicorn/fastapi for HTTP dev server
-pip install 'uvicorn[standard]' fastapi || true
+python -m pip install 'uvicorn[standard]' fastapi || true
 
 # 8) Final notes and shell rc guidance
 cat <<EOF
