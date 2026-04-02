@@ -59,19 +59,23 @@ pyenv local "$PY_VERSION"
 if [ -d "$VENV_DIR" ]; then
   echo "Virtualenv $VENV_DIR already exists"
 else
-  echo "Creating venv $VENV_DIR using python $(python -V)"
-  python -m venv "$VENV_DIR"
+  echo "Creating venv $VENV_DIR using python3 $(python3 -V)"
+  python3 -m venv "$VENV_DIR"
 fi
 
 # Activate venv for the remainder of the script
 # shellcheck disable=SC1091
 source "$VENV_DIR/bin/activate"
 
-python -m pip install --upgrade pip
+python3 -m pip install --upgrade pip
 
 # 6) Install project with server extras (mcp, click, etc.)
 echo "Installing project (server extras)..."
 pip install -e '.[server]'
+
+# If system python3 is not available, the pyenv-installed python will be used
+# after 'pyenv local' above. Use 'python3' explicitly when creating the venv
+# to avoid "python: command not found" on macOS.
 
 # 7) (Optional) install uvicorn/fastapi for HTTP dev server
 pip install 'uvicorn[standard]' fastapi || true
@@ -91,14 +95,14 @@ Setup complete. Next steps (recommended):
 
    cd "$REPO_ROOT"
    source $VENV_DIR/bin/activate
-   python -m hmrc_tax_mcp.server
+   python3 -m hmrc_tax_mcp.server
 
    Note: the MCP stdio server expects an MCP-compatible client (stdio transport).
 
 3) Alternatively, run the HTTP dev server (convenient for manual testing):
 
    source $VENV_DIR/bin/activate
-   python -m uvicorn src.hmrc_tax_mcp.server:app --reload --port 8000
+   python3 -m uvicorn src.hmrc_tax_mcp.server:app --reload --port 8000
 
 EOF
 
@@ -106,7 +110,7 @@ EOF
 if [ "${START_NOW:-no}" = "yes" ]; then
   echo "Starting MCP stdio server in background..."
   # Start in background; user can inspect logs if desired
-  nohup python -m hmrc_tax_mcp.server > hmrc-server.log 2>&1 &
+  nohup python3 -m hmrc_tax_mcp.server > hmrc-server.log 2>&1 &
   echo "Server started; logs: $REPO_ROOT/hmrc-server.log"
 fi
 
