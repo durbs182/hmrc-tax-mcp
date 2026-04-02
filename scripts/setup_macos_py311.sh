@@ -74,6 +74,22 @@ fi
 # 5) Create and activate virtualenv/venv using the chosen python
 if [ -d "$VENV_DIR" ]; then
   echo "Virtualenv $VENV_DIR already exists"
+  # Check the existing venv python version; if it doesn't match desired PY_VERSION major.minor, recreate
+  if [ -x "$VENV_DIR/bin/python" ]; then
+    EXISTING_PY_VER=$($VENV_DIR/bin/python -c "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')")
+    DESIRED_MAJOR_MINOR="${PY_VERSION%.*}"
+    if [ "$EXISTING_PY_VER" != "$DESIRED_MAJOR_MINOR" ]; then
+      echo "Existing venv Python $EXISTING_PY_VER does not match desired $DESIRED_MAJOR_MINOR; recreating venv with $PY_BIN"
+      rm -rf "$VENV_DIR"
+      "$PY_BIN" -m venv "$VENV_DIR"
+    else
+      echo "Existing venv Python $EXISTING_PY_VER matches desired $DESIRED_MAJOR_MINOR"
+    fi
+  else
+    echo "Existing venv has no python binary; recreating"
+    rm -rf "$VENV_DIR"
+    "$PY_BIN" -m venv "$VENV_DIR"
+  fi
 else
   echo "Creating venv $VENV_DIR using $($PY_BIN -V)"
   "$PY_BIN" -m venv "$VENV_DIR"
