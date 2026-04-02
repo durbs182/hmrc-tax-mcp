@@ -64,7 +64,7 @@ async def handle_list_tools() -> list[Tool]:
                     },
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                 },
                 "required": ["rule_id"],
@@ -83,7 +83,7 @@ async def handle_list_tools() -> list[Tool]:
                     "version": {"type": "string", "default": "latest"},
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                     "inputs": {
                         "type": "object",
@@ -140,7 +140,7 @@ async def handle_list_tools() -> list[Tool]:
                     "version": {"type": "string", "default": "latest"},
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                 },
                 "required": ["rule_id"],
@@ -163,7 +163,7 @@ async def handle_list_tools() -> list[Tool]:
                     "version": {"type": "string", "default": "latest"},
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                 },
                 "required": ["rule_id"],
@@ -183,7 +183,7 @@ async def handle_list_tools() -> list[Tool]:
                     "version": {"type": "string", "default": "latest"},
                     "jurisdiction": {
                         "type": "string",
-                        "description": "Optional. Pass 'rUK' or 'scotland' to disambiguate.",
+                        "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
                     "inputs": {
                         "type": "object",
