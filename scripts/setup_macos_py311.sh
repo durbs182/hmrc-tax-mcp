@@ -55,23 +55,34 @@ fi
 # Use the repo-local pyenv version
 pyenv local "$PY_VERSION"
 
-# 5) Create and activate virtualenv/venv
+# Determine the pyenv python binary (fallback to system python3)
+PY_BIN="$(pyenv which python 2>/dev/null || true)"
+if [ -z "$PY_BIN" ]; then
+  PY_BIN="$(command -v python3 || true)"
+fi
+if [ -z "$PY_BIN" ]; then
+  echo "No suitable python binary found (pyenv or system python3). Aborting."
+  exit 1
+fi
+
+# 5) Create and activate virtualenv/venv using the pyenv python
 if [ -d "$VENV_DIR" ]; then
   echo "Virtualenv $VENV_DIR already exists"
 else
-  echo "Creating venv $VENV_DIR using python3 $(python3 -V)"
-  python3 -m venv "$VENV_DIR"
+  echo "Creating venv $VENV_DIR using $($PY_BIN -V)"
+  "$PY_BIN" -m venv "$VENV_DIR"
 fi
 
 # Activate venv for the remainder of the script
 # shellcheck disable=SC1091
 source "$VENV_DIR/bin/activate"
 
-python3 -m pip install --upgrade pip
+# Ensure pip comes from the venv python
+python -m pip install --upgrade pip
 
 # 6) Install project with server extras (mcp, click, etc.)
 echo "Installing project (server extras)..."
-pip install -e '.[server]'
+python -m pip install -e '.[server]'
 
 # If system python3 is not available, the pyenv-installed python will be used
 # after 'pyenv local' above. Use 'python3' explicitly when creating the venv
