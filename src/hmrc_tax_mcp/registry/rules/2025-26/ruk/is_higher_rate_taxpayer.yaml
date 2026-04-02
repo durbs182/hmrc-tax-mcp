@@ -1,0 +1,29 @@
+rule_id: is_higher_rate_taxpayer
+version: "1.0.0"
+tax_year: "2025-26"
+jurisdiction: rUK
+title: Higher-Rate Taxpayer Test (rUK 2025-26)
+description: >
+  Returns true if the individual's adjusted net income exceeds the higher-rate
+  threshold of £50,270 for 2025-26. Used to determine which CGT rate applies
+  (18% basic / 24% higher) and which Personal Savings Allowance tier applies.
+  Input variable `adjusted_net_income` is gross income before the personal
+  allowance deduction (as used in ITTOIA 2005 s.58).
+dsl_source: |
+  return adjusted_net_income > 50270
+ast:
+  node: GT
+  args:
+    - node: VAR
+      name: adjusted_net_income
+    - node: CONST
+      value: 50270
+checksum: "04ca80549dc1361ccf88b1b3126d498b536165ac388578f0c788b693069279cc"
+citations:
+  - label: "HMRC – Income Tax rates and Personal Allowances"
+    url: "https://www.gov.uk/income-tax-rates"
+  - label: "ITA 2007 s.10 – The basic rate limit"
+    url: "https://www.legislation.gov.uk/ukpga/2007/3/section/10"
+provenance: manual
+published_at: "2025-04-06T00:00:00Z"
+reviewed_by: null

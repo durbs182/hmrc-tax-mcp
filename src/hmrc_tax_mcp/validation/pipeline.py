@@ -318,16 +318,14 @@ def _zero_variables(ast: dict[str, Any]) -> dict[str, Any]:
     variables: dict[str, Any] = {}
 
     def _walk(node: Any) -> None:
-        if not isinstance(node, dict):
-            return
-        if node.get("node") == "VAR":
-            variables[node["name"]] = Decimal(0)
-        for v in node.values():
-            if isinstance(v, dict):
+        if isinstance(node, dict):
+            if node.get("node") == "VAR":
+                variables[node["name"]] = Decimal(0)
+            for v in node.values():
                 _walk(v)
-            elif isinstance(v, list):
-                for item in v:
-                    _walk(item)
+        elif isinstance(node, list):
+            for item in node:
+                _walk(item)
 
     _walk(ast)
     return variables

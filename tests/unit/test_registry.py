@@ -28,6 +28,11 @@ def test_list_rules_contains_2025_26_rules() -> None:
         "savings_allowance_basic",
         "savings_allowance_higher",
         "dividend_allowance",
+        "savings_allowance_additional",
+        "is_higher_rate_taxpayer",
+        "income_tax_due",
+        "cgt_due",
+        "gia_disposal_gain",
     }
     assert expected.issubset(ids)
 
@@ -115,3 +120,151 @@ def test_state_pension_annual() -> None:
     result = Evaluator().eval(entry.ast)
     assert result == Decimal("11502.40")
 
+
+# ---------------------------------------------------------------------------
+# New rules: savings_allowance_additional, is_higher_rate_taxpayer,
+#            income_tax_due, cgt_due, gia_disposal_gain
+# ---------------------------------------------------------------------------
+
+def test_savings_allowance_additional_is_zero() -> None:
+    entry = get_rule("savings_allowance_additional", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator().eval(entry.ast)
+    assert result == Decimal("0")
+
+
+def test_savings_allowance_additional_checksum() -> None:
+    entry = get_rule("savings_allowance_additional", jurisdiction="rUK")
+    assert entry is not None
+    assert entry.checksum == "82f934f547e5da82b60c09fa32890153d40d7bfaaff3664fc87d5fbf79e4e217"
+
+
+def test_is_higher_rate_taxpayer_above_threshold() -> None:
+    """Income £60,000 > £50,270 → True."""
+    entry = get_rule("is_higher_rate_taxpayer", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(variables={"adjusted_net_income": Decimal("60000")}).eval(entry.ast)
+    assert result is True
+
+
+def test_is_higher_rate_taxpayer_at_threshold() -> None:
+    """Income exactly £50,270 is NOT above threshold → False."""
+    entry = get_rule("is_higher_rate_taxpayer", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(variables={"adjusted_net_income": Decimal("50270")}).eval(entry.ast)
+    assert result is False
+
+
+def test_is_higher_rate_taxpayer_below_threshold() -> None:
+    """Income £30,000 < £50,270 → False."""
+    entry = get_rule("is_higher_rate_taxpayer", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(variables={"adjusted_net_income": Decimal("30000")}).eval(entry.ast)
+    assert result is False
+
+
+def test_income_tax_due_basic_rate_only() -> None:
+    """£30,000 income → effectivePA=12570, basic_band=17430 → tax £3,486."""
+    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(variables={"adjusted_net_income": Decimal("30000")}).eval(entry.ast)
+    assert result == Decimal("3486.00")
+
+
+def test_income_tax_due_higher_rate() -> None:
+    """£60,000 → basic £7,540 + higher £3,892 = £11,432."""
+    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(variables={"adjusted_net_income": Decimal("60000")}).eval(entry.ast)
+    # basic_band: 50270-12570=37700 @ 20% = 7540; higher_band: 60000-50270=9730 @ 40% = 3892
+    assert result == Decimal("11432.00")
+
+
+def test_income_tax_due_tapered_pa() -> None:
+    """£110,000 → effectivePA=7570, basic_band=42700, higher_band=59730 → £32,432."""
+    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(variables={"adjusted_net_income": Decimal("110000")}).eval(entry.ast)
+    # basic: 42700*0.20=8540; higher: 59730*0.40=23892; total=32432
+    assert result == Decimal("32432.00")
+
+
+def test_income_tax_due_zero_income() -> None:
+    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(variables={"adjusted_net_income": Decimal("0")}).eval(entry.ast)
+    assert result == Decimal("0")
+
+
+def test_cgt_due_higher_rate_above_exempt() -> None:
+    """£10,000 gain, higher-rate taxpayer → taxable £7,000 @ 24% = £1,680."""
+    entry = get_rule("cgt_due", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(
+        variables={"capital_gain": Decimal("10000"), "is_higher_rate_taxpayer": True}
+    ).eval(entry.ast)
+    assert result == Decimal("1680.00")
+
+
+def test_cgt_due_basic_rate_above_exempt() -> None:
+    """£8,000 gain, basic-rate taxpayer → taxable £5,000 @ 18% = £900."""
+    entry = get_rule("cgt_due", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(
+        variables={"capital_gain": Decimal("8000"), "is_higher_rate_taxpayer": False}
+    ).eval(entry.ast)
+    assert result == Decimal("900.00")
+
+
+def test_cgt_due_within_exempt() -> None:
+    """£2,500 gain is within £3,000 exempt → £0 tax."""
+    entry = get_rule("cgt_due", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(
+        variables={"capital_gain": Decimal("2500"), "is_higher_rate_taxpayer": False}
+    ).eval(entry.ast)
+    assert result == Decimal("0")
+
+
+def test_gia_disposal_gain_proportional() -> None:
+    """GIA value £10,000, base cost £6,000, draw £4,000.
+    gain_fraction = 4000/10000 = 0.4; drawn=4000; gain = 1600."""
+    entry = get_rule("gia_disposal_gain", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(
+        variables={
+            "market_value": Decimal("10000"),
+            "base_cost": Decimal("6000"),
+            "amount_drawn": Decimal("4000"),
+        }
+    ).eval(entry.ast)
+    assert result == Decimal("1600.00")
+
+
+def test_gia_disposal_gain_capped_at_market_value() -> None:
+    """Drawing more than available is capped: draw £15,000 from £10,000 pot.
+    drawn=10000; gain_fraction=0.4; gain=4000."""
+    entry = get_rule("gia_disposal_gain", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(
+        variables={
+            "market_value": Decimal("10000"),
+            "base_cost": Decimal("6000"),
+            "amount_drawn": Decimal("15000"),
+        }
+    ).eval(entry.ast)
+    assert result == Decimal("4000.00")
+
+
+def test_gia_disposal_gain_no_gain_when_at_cost() -> None:
+    """market_value == base_cost → gain_fraction = 0 → capital gain £0."""
+    entry = get_rule("gia_disposal_gain", jurisdiction="rUK")
+    assert entry is not None
+    result = Evaluator(
+        variables={
+            "market_value": Decimal("10000"),
+            "base_cost": Decimal("10000"),
+            "amount_drawn": Decimal("5000"),
+        }
+    ).eval(entry.ast)
+    assert result == Decimal("0")
