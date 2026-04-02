@@ -248,20 +248,11 @@ class Evaluator:
                 result = args[0] * (args[1] / Decimal("100"))
                 self._record(t, {"fn": fn, "args": args}, result)
                 return result
-            if fn == "min":
+            if fn in {"min", "max"}:
                 if len(args) != 2:
-                    raise EvaluationError("min(): requires exactly 2 arguments")
-                if not isinstance(args[0], Decimal) or not isinstance(args[1], Decimal):
-                    raise EvaluationError("min(): args must be numbers")
-                result = min(args[0], args[1])
-                self._record(t, {"fn": fn, "args": args}, result)
-                return result
-            if fn == "max":
-                if len(args) != 2:
-                    raise EvaluationError("max(): requires exactly 2 arguments")
-                if not isinstance(args[0], Decimal) or not isinstance(args[1], Decimal):
-                    raise EvaluationError("max(): args must be numbers")
-                result = max(args[0], args[1])
+                    raise EvaluationError(f"{fn}(): requires exactly 2 arguments")
+                dec_args = self._require_decimal_args(args, fn)
+                result = min(dec_args) if fn == "min" else max(dec_args)
                 self._record(t, {"fn": fn, "args": args}, result)
                 return result
             if fn == "round":
