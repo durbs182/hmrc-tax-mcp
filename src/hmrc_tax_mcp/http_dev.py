@@ -203,7 +203,7 @@ async def call_tool(req: CallReq) -> Any:
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc))
 
-    if name == "tax.get_rule_snapshot":
+    if name == "tax_get_rule_snapshot":
         if get_rule_snapshot is None:
             raise HTTPException(status_code=500, detail="get_rule_snapshot not available")
         tax_year = str(arguments.get("tax_year", ""))
