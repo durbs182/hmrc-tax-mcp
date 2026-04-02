@@ -17,7 +17,7 @@ app = FastAPI()
 
 # Safe JSON helper to convert Decimal -> str for JSON transport
 def _json_serializable(data: Any) -> Any:
-    def default(o):
+    def default(o: object) -> str:
         if isinstance(o, Decimal):
             return str(o)
         raise TypeError()
@@ -27,45 +27,45 @@ def _json_serializable(data: Any) -> Any:
 try:
     from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
 except Exception as exc:  # pragma: no cover - environment dependent
-    list_rules = None
-    get_rule = None
-    get_rule_snapshot = None
-    _REGISTRY_IMPORT_ERROR = exc
+    list_rules = None  # type: ignore[assignment]
+    get_rule = None  # type: ignore[assignment]
+    get_rule_snapshot = None  # type: ignore[assignment]
+    _REGISTRY_IMPORT_ERROR: Exception | None = exc
 else:
     _REGISTRY_IMPORT_ERROR = None
 
 try:
     from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
 except Exception:
-    Evaluator = None
-    EvaluationError = Exception
+    Evaluator = None  # type: ignore[assignment, misc]
+    EvaluationError = Exception  # type: ignore[assignment, misc]
 
 try:
     from hmrc_tax_mcp.dsl.compiler import compile_dsl as compile_dsl_internal
 except Exception:
-    compile_dsl_internal = None
+    compile_dsl_internal = None  # type: ignore[assignment]
 
 try:
     from hmrc_tax_mcp.validation.pipeline import validate_rule as validate_rule_internal
 except Exception:
-    validate_rule_internal = None
+    validate_rule_internal = None  # type: ignore[assignment]
 
 try:
     # optional explainer; if not present, fallback
     from hmrc_tax_mcp.explainer import explain_rule as explain_rule_internal
 except Exception:
-    explain_rule_internal = None
+    explain_rule_internal = None  # type: ignore[assignment]
 
 class CallReq(BaseModel):
     name: str
     arguments: dict[str, Any] | None = None
 
 @app.get("/health")
-async def health():
+async def health() -> dict[str, Any]:
     return {"status": "ok"}
 
 @app.post("/call")
-async def call_tool(req: CallReq):
+async def call_tool(req: CallReq) -> Any:
     name = req.name
     arguments = req.arguments or {}
 
@@ -167,9 +167,9 @@ async def call_tool(req: CallReq):
         if rule is None:
             raise HTTPException(status_code=404, detail="Rule not found")
 
-        results = validate_rule_internal(rule.model_dump() if hasattr(rule, "model_dump") else rule)
+        results = validate_rule_internal(rule.model_dump())
         overall = all(r.passed for r in results)
-        data = {
+        validate_data: dict[str, Any] = {
             "rule_id": rule.rule_id,
             "version": rule.version,
             "overall": overall,
@@ -182,7 +182,7 @@ async def call_tool(req: CallReq):
                 for r in results
             ],
         }
-        return _json_serializable(data)
+        return _json_serializable(validate_data)
 
     if name == "explain_rule":
         if explain_rule_internal is None:
@@ -198,9 +198,7 @@ async def call_tool(req: CallReq):
         if rule is None:
             raise HTTPException(status_code=404, detail="Rule not found")
         try:
-            explanation = explain_rule_internal(
-                rule.model_dump() if hasattr(rule, "model_dump") else rule
-            )
+            explanation = explain_rule_internal(rule.model_dump())
             return _json_serializable(explanation)
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc))
@@ -208,8 +206,8 @@ async def call_tool(req: CallReq):
     if name == "tax.get_rule_snapshot":
         if get_rule_snapshot is None:
             raise HTTPException(status_code=500, detail="get_rule_snapshot not available")
-        tax_year = arguments.get("tax_year")
-        jurisdiction = arguments.get("jurisdiction")
+        tax_year = str(arguments.get("tax_year", ""))
+        jurisdiction = str(arguments.get("jurisdiction", ""))
         rules = get_rule_snapshot(tax_year, jurisdiction)
         return _json_serializable({
             "tax_year": tax_year,

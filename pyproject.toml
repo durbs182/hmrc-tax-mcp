@@ -55,3 +55,8 @@ strict = true
 module = ["mcp", "mcp.*", "anthropic", "anthropic.*"]
 ignore_missing_imports = true
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+# fastapi and pydantic are optional extras in the dev environment
+module = ["fastapi", "fastapi.*", "pydantic", "pydantic.*"]
+ignore_missing_imports = true
