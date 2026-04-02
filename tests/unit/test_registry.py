@@ -139,6 +139,30 @@ def test_savings_allowance_additional_checksum() -> None:
     assert entry.checksum == "82f934f547e5da82b60c09fa32890153d40d7bfaaff3664fc87d5fbf79e4e217"
 
 
+def test_is_higher_rate_taxpayer_checksum() -> None:
+    entry = get_rule("is_higher_rate_taxpayer", jurisdiction="rUK")
+    assert entry is not None
+    assert entry.checksum == "04ca80549dc1361ccf88b1b3126d498b536165ac388578f0c788b693069279cc"
+
+
+def test_income_tax_due_checksum() -> None:
+    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    assert entry is not None
+    assert entry.checksum == "34ae672c2c67165e466a5e8e63526e3c6ea8515f8514f5edbf6057cab5452144"
+
+
+def test_cgt_due_checksum() -> None:
+    entry = get_rule("cgt_due", jurisdiction="rUK")
+    assert entry is not None
+    assert entry.checksum == "5c23ead756a880f5e46a9767b0f2931fea4c88fc0aa3a06900b6c0c749be0eb2"
+
+
+def test_gia_disposal_gain_checksum() -> None:
+    entry = get_rule("gia_disposal_gain", jurisdiction="rUK")
+    assert entry is not None
+    assert entry.checksum == "bbea96471b082ad1c76b0f10a7aa5c35986f1a7f3cc3c6508fae52e7e7fe4512"
+
+
 def test_is_higher_rate_taxpayer_above_threshold() -> None:
     """Income £60,000 > £50,270 → True."""
     entry = get_rule("is_higher_rate_taxpayer", jurisdiction="rUK")
@@ -181,12 +205,12 @@ def test_income_tax_due_higher_rate() -> None:
 
 
 def test_income_tax_due_tapered_pa() -> None:
-    """£110,000 → effectivePA=7570, basic_band=42700, higher_band=59730 → £32,432."""
+    """£110,000 → effectivePA=7570, taxable=102430, basic_band=37700, higher_band=64730 → £33,432."""
     entry = get_rule("income_tax_due", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator(variables={"adjusted_net_income": Decimal("110000")}).eval(entry.ast)
-    # basic: 42700*0.20=8540; higher: 59730*0.40=23892; total=32432
-    assert result == Decimal("32432.00")
+    # taxable: 110000-7570=102430; basic: 37700*0.20=7540; higher: 64730*0.40=25892; total=33432
+    assert result == Decimal("33432.00")
 
 
 def test_income_tax_due_zero_income() -> None:

@@ -7,17 +7,20 @@ description: >
   Calculates the total income tax liability for a given adjusted net income,
   combining the personal allowance taper and the three rate bands in a single
   rule. The personal allowance (£12,570) tapers by £1 per £2 above £100,000,
-  reaching £0 at £125,140. Bands: 20% (basic, up to £50,270), 40% (higher,
-  £50,270–£125,140), 45% (additional, above £125,140). Input variable
+  reaching £0 at £125,140. Taxable income is computed as adjusted net income
+  minus the effective personal allowance. The basic-rate band is always £37,700
+  wide (20%); the higher-rate band covers taxable income beyond that up to
+  £125,140 gross (40%); the additional-rate band covers income above £125,140
+  gross (45%). Result is rounded to the nearest penny. Input variable
   `adjusted_net_income` is gross taxable income before the personal allowance.
 dsl_source: |
   let effective_pa = taper adjusted_net_income:
     threshold 100000
     ratio 1 per 2
     base 12570
-  let income_above_pa = max(adjusted_net_income - effective_pa, 0)
-  let basic_band = min(income_above_pa, 50270 - effective_pa)
-  let higher_band = max(min(adjusted_net_income, 125140) - 50270, 0)
+  let taxable_income = max(adjusted_net_income - effective_pa, 0)
+  let basic_band = min(taxable_income, 37700)
+  let higher_band = max(min(adjusted_net_income, 125140) - effective_pa - 37700, 0)
   let additional_band = max(adjusted_net_income - 125140, 0)
   return round(basic_band * 0.20 + higher_band * 0.40 + additional_band * 0.45, 2)
 ast:
@@ -37,7 +40,7 @@ ast:
         base:
           node: CONST
           value: 12570
-    - - income_above_pa
+    - - taxable_income
       - node: CALL
         name: max
         args:
@@ -54,28 +57,28 @@ ast:
         name: min
         args:
           - node: VAR
-            name: income_above_pa
-          - node: SUB
-            args:
-              - node: CONST
-                value: 50270
-              - node: VAR
-                name: effective_pa
+            name: taxable_income
+          - node: CONST
+            value: 37700
     - - higher_band
       - node: CALL
         name: max
         args:
           - node: SUB
             args:
-              - node: CALL
-                name: min
+              - node: SUB
                 args:
+                  - node: CALL
+                    name: min
+                    args:
+                      - node: VAR
+                        name: adjusted_net_income
+                      - node: CONST
+                        value: 125140
                   - node: VAR
-                    name: adjusted_net_income
-                  - node: CONST
-                    value: 125140
+                    name: effective_pa
               - node: CONST
-                value: 50270
+                value: 37700
           - node: CONST
             value: 0
     - - additional_band
@@ -118,7 +121,7 @@ ast:
                 value: 0.45
       - node: CONST
         value: 2
-checksum: "854e3d5ba7770da9e72ff068dd669b8231662d9fa1b74024f7a9e315174b4ea1"
+checksum: "34ae672c2c67165e466a5e8e63526e3c6ea8515f8514f5edbf6057cab5452144"
 citations:
   - label: "HMRC – Income Tax rates and Personal Allowances"
     url: "https://www.gov.uk/income-tax-rates"
