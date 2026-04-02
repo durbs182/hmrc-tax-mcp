@@ -1,14 +1,17 @@
 """Lightweight FastAPI wrapper for local development.
-Provides a single `/call` endpoint to invoke the same internal functions the MCP stdio server exposes.
+
+Provides a single `/call` endpoint to invoke the same internal functions
+the MCP stdio server exposes.
 This file is intended for local dev and testing only (not for production).
 """
 from __future__ import annotations
 
+import json
+from decimal import Decimal
+from typing import Any
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Any, Dict, Optional
-from decimal import Decimal
-import json
 
 app = FastAPI()
 
@@ -22,7 +25,7 @@ def _json_serializable(data: Any) -> Any:
 
 # Try to import internal modules; fail gracefully with informative errors
 try:
-    from hmrc_tax_mcp.registry.store import list_rules, get_rule, get_rule_snapshot
+    from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
 except Exception as exc:  # pragma: no cover - environment dependent
     list_rules = None
     get_rule = None
@@ -32,7 +35,7 @@ else:
     _REGISTRY_IMPORT_ERROR = None
 
 try:
-    from hmrc_tax_mcp.evaluator import Evaluator, EvaluationError
+    from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
 except Exception:
     Evaluator = None
     EvaluationError = Exception
@@ -55,7 +58,7 @@ except Exception:
 
 class CallReq(BaseModel):
     name: str
-    arguments: Optional[Dict[str, Any]] = None
+    arguments: dict[str, Any] | None = None
 
 @app.get("/health")
 async def health():
@@ -68,7 +71,10 @@ async def call_tool(req: CallReq):
 
     if name == "list_rules":
         if list_rules is None:
-            raise HTTPException(status_code=500, detail=f"registry not available: {_REGISTRY_IMPORT_ERROR}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"registry not available: {_REGISTRY_IMPORT_ERROR}",
+            )
         rules = list_rules()
         data = [
             {
@@ -86,7 +92,11 @@ async def call_tool(req: CallReq):
         if get_rule is None:
             raise HTTPException(status_code=500, detail="registry.get_rule not available")
         try:
-            rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"), jurisdiction=arguments.get("jurisdiction"))
+            rule = get_rule(
+                arguments["rule_id"],
+                arguments.get("version", "latest"),
+                jurisdiction=arguments.get("jurisdiction"),
+            )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
         if rule is None:
@@ -99,9 +109,16 @@ async def call_tool(req: CallReq):
 
     if name == "execute_rule":
         if get_rule is None or Evaluator is None:
-            raise HTTPException(status_code=500, detail="runtime: registry or evaluator not available")
+            raise HTTPException(
+                status_code=500,
+                detail="runtime: registry or evaluator not available",
+            )
         try:
-            rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"), jurisdiction=arguments.get("jurisdiction"))
+            rule = get_rule(
+                arguments["rule_id"],
+                arguments.get("version", "latest"),
+                jurisdiction=arguments.get("jurisdiction"),
+            )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
         if rule is None:
@@ -115,7 +132,11 @@ async def call_tool(req: CallReq):
         except EvaluationError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
 
-        response: Dict[str, Any] = {"rule_id": rule.rule_id, "version": rule.version, "output": output}
+        response: dict[str, Any] = {
+            "rule_id": rule.rule_id,
+            "version": rule.version,
+            "output": output,
+        }
         if trace_flag:
             # attempt to return trace steps if available
             trace = getattr(evaluator, "trace_steps", None)
@@ -136,7 +157,11 @@ async def call_tool(req: CallReq):
         if validate_rule_internal is None or get_rule is None:
             raise HTTPException(status_code=500, detail="validation or registry not available")
         try:
-            rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"), jurisdiction=arguments.get("jurisdiction"))
+            rule = get_rule(
+                arguments["rule_id"],
+                arguments.get("version", "latest"),
+                jurisdiction=arguments.get("jurisdiction"),
+            )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
         if rule is None:
@@ -144,22 +169,38 @@ async def call_tool(req: CallReq):
 
         results = validate_rule_internal(rule.model_dump() if hasattr(rule, "model_dump") else rule)
         overall = all(r.passed for r in results)
-        data = {"rule_id": rule.rule_id, "version": rule.version, "overall": overall, "stages": [
-            {"stage": getattr(r, "stage", None), "passed": getattr(r, "passed", False), "message": getattr(r, "message", None)} for r in results
-        ]}
+        data = {
+            "rule_id": rule.rule_id,
+            "version": rule.version,
+            "overall": overall,
+            "stages": [
+                {
+                    "stage": getattr(r, "stage", None),
+                    "passed": getattr(r, "passed", False),
+                    "message": getattr(r, "message", None),
+                }
+                for r in results
+            ],
+        }
         return _json_serializable(data)
 
     if name == "explain_rule":
         if explain_rule_internal is None:
             raise HTTPException(status_code=500, detail="explain_rule not available")
         try:
-            rule = get_rule(arguments["rule_id"], arguments.get("version", "latest"), jurisdiction=arguments.get("jurisdiction"))
+            rule = get_rule(
+                arguments["rule_id"],
+                arguments.get("version", "latest"),
+                jurisdiction=arguments.get("jurisdiction"),
+            )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
         if rule is None:
             raise HTTPException(status_code=404, detail="Rule not found")
         try:
-            explanation = explain_rule_internal(rule.model_dump() if hasattr(rule, "model_dump") else rule)
+            explanation = explain_rule_internal(
+                rule.model_dump() if hasattr(rule, "model_dump") else rule
+            )
             return _json_serializable(explanation)
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc))
@@ -170,6 +211,10 @@ async def call_tool(req: CallReq):
         tax_year = arguments.get("tax_year")
         jurisdiction = arguments.get("jurisdiction")
         rules = get_rule_snapshot(tax_year, jurisdiction)
-        return _json_serializable({"tax_year": tax_year, "jurisdiction": jurisdiction, "rules": [r.model_dump(mode="json") for r in rules]})
+        return _json_serializable({
+            "tax_year": tax_year,
+            "jurisdiction": jurisdiction,
+            "rules": [r.model_dump(mode="json") for r in rules],
+        })
 
     raise HTTPException(status_code=400, detail=f"Unknown tool: {name}")

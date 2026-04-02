@@ -205,7 +205,7 @@ def test_income_tax_due_higher_rate() -> None:
 
 
 def test_income_tax_due_tapered_pa() -> None:
-    """£110,000 → effectivePA=7570, taxable=102430, basic_band=37700, higher_band=64730 → £33,432."""
+    """£110k → effectivePA=7570, taxable=102430, basic_band=37700, higher_band=64730 → £33,432."""
     entry = get_rule("income_tax_due", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator(variables={"adjusted_net_income": Decimal("110000")}).eval(entry.ast)
