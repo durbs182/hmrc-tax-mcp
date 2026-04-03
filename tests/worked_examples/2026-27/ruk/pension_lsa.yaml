@@ -1,0 +1,13 @@
+# Provenance: HMRC-published standard individual lump sum allowance for 2026-27.
+# Source: https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates
+# Verbatim table: "Standard individual lump sum allowance — 2026 to 2027 — £268,275"
+# Also confirmed by:
+#   https://www.gov.uk/tax-on-pension/tax-free — "The most you can take is £268,275"
+
+examples:
+  - description: "Lump Sum Allowance is £268,275"
+    # HMRC verbatim: "Standard individual lump sum allowance — 2026 to 2027 — £268,275"
+    # Source: https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates
+    source: "HMRC gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates"
+    inputs: {}
+    expected: 268275

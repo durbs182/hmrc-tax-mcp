@@ -1,0 +1,24 @@
+rule_id: savings_allowance_higher
+version: "1.0.0"
+tax_year: "2026-27"
+jurisdiction: rUK
+title: Personal Savings Allowance – Higher Rate (rUK 2026-27)
+description: >
+  Higher-rate taxpayers can earn up to £500 of savings interest tax-free
+  per year under the Personal Savings Allowance (PSA). Basic-rate taxpayers
+  get £1,000; additional-rate taxpayers get nil. This rule returns the PSA
+  for higher-rate taxpayers.
+dsl_source: |
+  return 500
+ast:
+  node: CONST
+  value: 500
+checksum: "3f40c4c688f2ee8b0ba105c433db2277b86930168c39a68d3096bdc7f4aa07a2"
+citations:
+  - label: "HMRC – Tax on savings interest"
+    url: "https://www.gov.uk/apply-tax-free-interest-on-savings"
+  - label: "HMRC – Savings rates and allowances 2026-27"
+    url: "https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past"
+provenance: manual
+published_at: "2026-04-06T00:00:00Z"
+reviewed_by: null

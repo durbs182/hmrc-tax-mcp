@@ -1,0 +1,40 @@
+rule_id: income_tax_bands
+version: "1.0.0"
+tax_year: "2026-27"
+jurisdiction: rUK
+title: Income Tax Bands (rUK 2026-27)
+description: >
+  Applies the 2026-27 rUK income tax bands using the statutory income thresholds,
+  including the personal allowance boundary at £12,570. Input variable
+  `taxable_income` must therefore be the relevant income amount BEFORE any
+  personal allowance deduction or taper adjustment is applied. Income below
+  £12,570 falls outside all rated bands and attracts zero tax.
+dsl_source: |
+  bands taxable_income:
+    12570  to 50270  at 20%
+    50270  to 125140 at 40%
+    125140+           at 45%
+ast:
+  node: BAND_APPLY
+  args:
+    - node: VAR
+      name: taxable_income
+  bands:
+    - lower: 12570
+      upper: 50270
+      rate: 0.2
+    - lower: 50270
+      upper: 125140
+      rate: 0.4
+    - lower: 125140
+      upper: null
+      rate: 0.45
+checksum: "8b039b0158b5b906334a76d2810cdf90a3bb29ef487788f81974bc2387bbe6b1"
+citations:
+  - label: "HMRC – Income Tax rates and Personal Allowances"
+    url: "https://www.gov.uk/income-tax-rates"
+  - label: "HMRC – Tax rates 2026-27 (GOV.UK rates and allowances)"
+    url: "https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past"
+provenance: manual
+published_at: "2026-04-06T00:00:00Z"
+reviewed_by: null
