@@ -151,7 +151,14 @@ def _default_worked_examples_path(rule: dict[str, Any]) -> Path | None:
     rule_id = rule.get("rule_id")
     if not tax_year or not jurisdiction or not rule_id:
         return None
-    path = _repo_root() / "tests" / "worked_examples" / str(tax_year) / jurisdiction / f"{rule_id}.yaml"
+    path = (
+        _repo_root()
+        / "tests"
+        / "worked_examples"
+        / str(tax_year)
+        / jurisdiction
+        / f"{rule_id}.yaml"
+    )
     return path if path.exists() else None
 
 

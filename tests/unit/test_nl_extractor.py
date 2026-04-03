@@ -146,9 +146,17 @@ class TestExtractionResult:
         assert d["provenance"] == "nl_extracted"
 
     def test_title_citation_is_normalised_to_label(self) -> None:
+        payload = {
+            "rule_id": "test",
+            "title": "T",
+            "description": "D",
+            "tax_year": "2025-26",
+            "jurisdiction": "rUK",
+            "citations": [{"title": "HMRC Manual", "url": "https://example.com"}],
+        }
         response = (
             f"{_VALID_DSL}\n<<<JSON\n"
-            f"{json.dumps({'rule_id': 'test', 'title': 'T', 'description': 'D', 'tax_year': '2025-26', 'jurisdiction': 'rUK', 'citations': [{'title': 'HMRC Manual', 'url': 'https://example.com'}]})}\n"
+            f"{json.dumps(payload)}\n"
             "JSON>>>"
         )
         result = _parse_response(response)
