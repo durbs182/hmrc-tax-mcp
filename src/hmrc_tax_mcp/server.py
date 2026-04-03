@@ -68,7 +68,10 @@ async def handle_list_tools() -> list[Tool]:
                     },
                     "tax_year": {
                         "type": "string",
-                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
+                        "description": (
+                            "e.g. '2025-26'. Required when version is explicit "
+                            "and multiple tax years share the same version."
+                        ),
                     },
                 },
                 "required": ["rule_id"],
@@ -91,7 +94,10 @@ async def handle_list_tools() -> list[Tool]:
                     },
                     "tax_year": {
                         "type": "string",
-                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
+                        "description": (
+                            "e.g. '2025-26'. Required when version is explicit "
+                            "and multiple tax years share the same version."
+                        ),
                     },
                     "inputs": {
                         "type": "object",
@@ -152,7 +158,10 @@ async def handle_list_tools() -> list[Tool]:
                     },
                     "tax_year": {
                         "type": "string",
-                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
+                        "description": (
+                            "e.g. '2025-26'. Required when version is explicit "
+                            "and multiple tax years share the same version."
+                        ),
                     },
                 },
                 "required": ["rule_id"],
@@ -179,7 +188,10 @@ async def handle_list_tools() -> list[Tool]:
                     },
                     "tax_year": {
                         "type": "string",
-                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
+                        "description": (
+                            "e.g. '2025-26'. Required when version is explicit "
+                            "and multiple tax years share the same version."
+                        ),
                     },
                 },
                 "required": ["rule_id"],
@@ -203,7 +215,10 @@ async def handle_list_tools() -> list[Tool]:
                     },
                     "tax_year": {
                         "type": "string",
-                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
+                        "description": (
+                            "e.g. '2025-26'. Required when version is explicit "
+                            "and multiple tax years share the same version."
+                        ),
                     },
                     "inputs": {
                         "type": "object",
