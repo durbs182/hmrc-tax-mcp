@@ -1,0 +1,41 @@
+rule_id: income_tax_bands
+version: "1.0.0"
+tax_year: "2028-29"
+jurisdiction: rUK
+title: Income Tax Bands (rUK 2028-29)
+description: >
+  Applies the 2028-29 rUK income tax bands to post-personal-allowance taxable income.
+  All thresholds are frozen at 2021-22 levels under the threshold freeze legislated
+  to run until 5 April 2031. Input variable `taxable_income` must be income AFTER
+  deduction of the personal allowance (i.e. apply pa_taper first).
+dsl_source: |
+  bands taxable_income:
+    12570  to 50270  at 20%
+    50270  to 125140 at 40%
+    125140+           at 45%
+ast:
+  node: BAND_APPLY
+  args:
+    - node: VAR
+      name: taxable_income
+  bands:
+    - lower: 12570
+      upper: 50270
+      rate: 0.2
+    - lower: 50270
+      upper: 125140
+      rate: 0.4
+    - lower: 125140
+      upper: null
+      rate: 0.45
+checksum: "8b039b0158b5b906334a76d2810cdf90a3bb29ef487788f81974bc2387bbe6b1"
+citations:
+  - label: "HMRC – Income Tax rates and Personal Allowances"
+    url: "https://www.gov.uk/income-tax-rates"
+  - label: "GOV.UK – Maintaining Income Tax thresholds until 5 April 2031"
+    url: "https://www.gov.uk/government/publications/maintaining-income-tax-and-equivalent-national-insurance-contributions-thresholds-until-5-april-2031"
+  - label: "HMRC – Income Tax rates and allowances: current and past"
+    url: "https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past"
+provenance: manual
+published_at: "2028-04-06T00:00:00Z"
+reviewed_by: null
