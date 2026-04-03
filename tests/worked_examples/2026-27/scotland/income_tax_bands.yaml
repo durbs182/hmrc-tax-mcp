@@ -1,0 +1,45 @@
+rule_id: income_tax_bands
+tax_year: "2026-27"
+jurisdiction: scotland
+examples:
+  - description: "Income within personal allowance — no tax"
+    inputs:
+      taxable_income: 10000
+    expected: "0.00"
+    tolerance: "0.01"
+
+  - description: "Starter rate only — £14,000 (£1,430 in starter band at 19%)"
+    inputs:
+      taxable_income: 14000
+    expected: "271.70"
+    tolerance: "0.01"
+
+  - description: "Basic rate band — £25,000"
+    inputs:
+      taxable_income: 25000
+    expected: "2446.33"
+    tolerance: "0.01"
+
+  - description: "Intermediate rate band — £35,000"
+    inputs:
+      taxable_income: 35000
+    expected: "4501.07"
+    tolerance: "0.01"
+
+  - description: "Higher rate — £60,000"
+    inputs:
+      taxable_income: 60000
+    expected: "13182.05"
+    tolerance: "0.01"
+
+  - description: "Advanced rate — £90,000"
+    inputs:
+      taxable_income: 90000
+    expected: "26232.05"
+    tolerance: "0.01"
+
+  - description: "Top rate — £150,000"
+    inputs:
+      taxable_income: 150000
+    expected: "53977.85"
+    tolerance: "0.01"

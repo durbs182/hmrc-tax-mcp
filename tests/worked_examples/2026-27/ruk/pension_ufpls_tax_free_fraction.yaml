@@ -1,0 +1,23 @@
+# Provenance: HMRC-published rule for UFPLS tax-free fraction.
+# Source: https://www.gov.uk/tax-on-pension/tax-free
+# Verbatim: "You can usually take up to 25% of the amount built up in any pension as
+# a tax-free lump sum."
+# HMRC concrete example on same page: "Your whole pension is worth £60,000. You take
+# £15,000 tax-free." → £15,000 ÷ £60,000 = 0.25 = 25%.
+
+examples:
+  - description: "UFPLS tax-free fraction is 25%"
+    # HMRC verbatim: "You can usually take up to 25% of the amount built up in any
+    # pension as a tax-free lump sum."
+    # Source: https://www.gov.uk/tax-on-pension/tax-free
+    source: "HMRC gov.uk/tax-on-pension/tax-free — verbatim 25% rule"
+    inputs: {}
+    expected: 0.25
+
+  - description: "HMRC example: £60,000 pension → £15,000 tax-free → fraction 0.25"
+    # HMRC verbatim example: "Your whole pension is worth £60,000. You take £15,000
+    # tax-free." (£15,000 ÷ £60,000 = 0.25)
+    # Source: https://www.gov.uk/tax-on-pension/tax-free (under 'Lump sums from your pension')
+    source: "HMRC gov.uk/tax-on-pension/tax-free — published example"
+    inputs: {}
+    expected: 0.25

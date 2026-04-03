@@ -1,0 +1,29 @@
+# Provenance: HMRC-published rates for 2026-27.
+# Source: https://www.gov.uk/capital-gains-tax/rates
+# Verbatim (gains from 6 April 2026 onwards):
+#   "If you pay higher rate Income Tax: 24% on your gains from other chargeable assets"
+#   "If you pay basic rate Income Tax: 18% on your gains from other chargeable assets"
+# HMRC Example 1 (basic rate): taxable income £20,000, gain £12,600 → after £3,000 exempt
+#   = £9,600 taxable gain. £20,000 + £9,600 = £29,600 < £37,700 basic rate band → 18%.
+# HMRC Example 2 (higher rate): taxable income £20,000, gain £52,600 → £49,600 taxable.
+#   Combined £69,600 > £37,700 → taxed at both 18% and 24%. The overall rate for a
+#   higher-rate taxpayer on non-residential assets is 24%.
+
+examples:
+  - description: "Higher-rate taxpayer → 24% rate"
+    # HMRC: "24% on your gains from other chargeable assets" (gains from 6 April 2026).
+    # Source: https://www.gov.uk/capital-gains-tax/rates
+    source: "HMRC gov.uk/capital-gains-tax/rates — verbatim 2026-27 rates"
+    inputs:
+      is_higher_rate_taxpayer: true
+    expected: 24
+
+  - description: "Basic-rate taxpayer → 18% rate"
+    # HMRC: "18% on your gains from other chargeable assets" (gains from 6 April 2026).
+    # Confirmed by HMRC Example 1 on the same page: £20,000 income + £9,600 net gain =
+    # £29,600 combined, within basic rate band → 18%.
+    # Source: https://www.gov.uk/capital-gains-tax/rates
+    source: "HMRC gov.uk/capital-gains-tax/rates — verbatim 2026-27 rates + Example 1"
+    inputs:
+      is_higher_rate_taxpayer: false
+    expected: 18

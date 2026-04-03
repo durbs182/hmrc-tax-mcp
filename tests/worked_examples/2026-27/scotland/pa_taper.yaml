@@ -1,0 +1,33 @@
+rule_id: pa_taper
+tax_year: "2026-27"
+jurisdiction: scotland
+examples:
+  - description: "Income below threshold — full personal allowance"
+    inputs:
+      adjusted_net_income: 90000
+    expected: "12570"
+    tolerance: "0"
+
+  - description: "Income at threshold — full personal allowance"
+    inputs:
+      adjusted_net_income: 100000
+    expected: "12570"
+    tolerance: "0"
+
+  - description: "£10,000 above threshold — allowance reduced by £5,000"
+    inputs:
+      adjusted_net_income: 110000
+    expected: "7570"
+    tolerance: "0"
+
+  - description: "At £125,140 — allowance fully tapered to zero"
+    inputs:
+      adjusted_net_income: 125140
+    expected: "0"
+    tolerance: "0"
+
+  - description: "Above £125,140 — allowance remains zero"
+    inputs:
+      adjusted_net_income: 130000
+    expected: "0"
+    tolerance: "0"
