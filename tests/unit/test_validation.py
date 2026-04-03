@@ -362,3 +362,74 @@ class TestRoundingPolicyEnforcement:
         }
         results = validate_rule(rule)
         assert results[1].passed, results[1].message
+
+
+# ---------------------------------------------------------------------------
+# Frozen income tax threshold years (2027-28 through 2030-31)
+# ---------------------------------------------------------------------------
+
+FROZEN_YEARS = ["2027-28", "2028-29", "2029-30", "2030-31"]
+FROZEN_YEARS_DIR = Path(__file__).parent.parent / "worked_examples"
+
+
+class TestFrozenYearRegistry:
+    """All frozen years must be stored as distinct registry entries."""
+
+    def test_all_frozen_years_stored_distinctly(self) -> None:
+        from hmrc_tax_mcp.registry.store import get_rule_snapshot
+
+        for year in ["2025-26", "2026-27", *FROZEN_YEARS]:
+            rules = get_rule_snapshot(year, "rUK")
+            rule_ids = {r.rule_id for r in rules}
+            assert "income_tax_bands" in rule_ids, (
+                f"income_tax_bands missing from {year}/rUK snapshot"
+            )
+
+    def test_frozen_years_have_identical_checksum(self) -> None:
+        from hmrc_tax_mcp.registry.store import get_rule_snapshot
+
+        baseline = next(
+            r for r in get_rule_snapshot("2025-26", "rUK")
+            if r.rule_id == "income_tax_bands"
+        )
+        for year in FROZEN_YEARS:
+            entry = next(
+                r for r in get_rule_snapshot(year, "rUK")
+                if r.rule_id == "income_tax_bands"
+            )
+            assert entry.checksum == baseline.checksum, (
+                f"{year} income_tax_bands checksum differs from 2025-26 baseline"
+            )
+            assert entry.dsl_source == baseline.dsl_source, (
+                f"{year} income_tax_bands DSL differs from 2025-26 baseline"
+            )
+
+
+class TestFrozenYearWorkedExamples:
+    """Worked examples for each frozen year must pass validation."""
+
+    def _run_year(self, tax_year: str) -> None:
+        from hmrc_tax_mcp.registry.store import get_rule_snapshot
+
+        rules = get_rule_snapshot(tax_year, "rUK")
+        entry = next(r for r in rules if r.rule_id == "income_tax_bands")
+        examples = load_worked_examples(
+            FROZEN_YEARS_DIR / tax_year / "ruk" / "income_tax_bands.yaml"
+        )
+        assert len(examples) > 0, f"No worked examples found for {tax_year}"
+        results = validate_rule(entry.model_dump(), worked_examples=examples)
+        assert results[4].passed, (
+            f"{tax_year} worked examples failed: {results[4].details}"
+        )
+
+    def test_2027_28_worked_examples(self) -> None:
+        self._run_year("2027-28")
+
+    def test_2028_29_worked_examples(self) -> None:
+        self._run_year("2028-29")
+
+    def test_2029_30_worked_examples(self) -> None:
+        self._run_year("2029-30")
+
+    def test_2030_31_worked_examples(self) -> None:
+        self._run_year("2030-31")

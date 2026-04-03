@@ -352,3 +352,61 @@ class TestJurisdictionDefault:
         entry = get_rule("cgt_exempt")
         assert entry is not None
         assert entry.jurisdiction == "rUK"
+
+
+# ---------------------------------------------------------------------------
+# Tax-year determinism: get_rule() with explicit version and/or tax_year
+# ---------------------------------------------------------------------------
+
+class TestTaxYearDeterminism:
+    """
+    Tests that get_rule() is deterministic when the same rule_id/version/jurisdiction
+    exists across multiple tax years (as is the case for frozen-threshold years).
+    """
+
+    def test_latest_returns_newest_tax_year_when_versions_tie(self) -> None:
+        """When multiple years share the same (highest) semver, the newest tax_year wins."""
+        # pa_taper is v1.0.0 in both 2025-26 and 2026-27; 2026-27 should be returned.
+        entry = get_rule("pa_taper", jurisdiction="rUK")
+        assert entry is not None
+        assert entry.tax_year == "2026-27"
+
+    def test_latest_prefers_higher_semver_over_newer_tax_year(self) -> None:
+        """v1.0.1 (2025-26) beats v1.0.0 (2026-27+) regardless of tax_year order."""
+        # income_tax_bands is v1.0.1 in 2025-26 and v1.0.0 in 2026-27 through 2030-31.
+        entry = get_rule("income_tax_bands", jurisdiction="rUK")
+        assert entry is not None
+        assert entry.version == "1.0.1"
+        assert entry.tax_year == "2025-26"
+
+    def test_explicit_version_with_tax_year_returns_correct_entry(self) -> None:
+        """Providing tax_year narrows to exactly one entry when version is explicit."""
+        entry = get_rule("pa_taper", version="1.0.0", jurisdiction="rUK", tax_year="2025-26")
+        assert entry is not None
+        assert entry.tax_year == "2025-26"
+        assert entry.jurisdiction == "rUK"
+
+    def test_explicit_version_without_tax_year_raises_when_ambiguous(self) -> None:
+        """Explicit version + no tax_year raises ValueError when multiple years match."""
+        import pytest
+        with pytest.raises(ValueError, match="multiple tax years"):
+            get_rule("pa_taper", version="1.0.0", jurisdiction="rUK")
+
+    def test_explicit_version_without_tax_year_returns_entry_when_unique(self) -> None:
+        """Explicit version + no tax_year is fine when only one year has that version."""
+        # income_tax_bands v1.0.1 exists only in 2025-26.
+        entry = get_rule("income_tax_bands", version="1.0.1", jurisdiction="rUK")
+        assert entry is not None
+        assert entry.tax_year == "2025-26"
+
+    def test_tax_year_filter_on_latest(self) -> None:
+        """Passing tax_year with version='latest' restricts the pool to that year."""
+        entry = get_rule("income_tax_bands", jurisdiction="rUK", tax_year="2027-28")
+        assert entry is not None
+        assert entry.tax_year == "2027-28"
+        assert entry.jurisdiction == "rUK"
+
+    def test_nonexistent_tax_year_returns_none(self) -> None:
+        """Filtering by a tax_year that has no entries returns None."""
+        entry = get_rule("income_tax_bands", jurisdiction="rUK", tax_year="1999-00")
+        assert entry is None
