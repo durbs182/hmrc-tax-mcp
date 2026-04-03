@@ -1,4 +1,13 @@
+# Provenance: HMRC-published annual exempt amount for 2025-26.
+# Source: https://www.gov.uk/capital-gains-tax/allowances
+# Verbatim: "The Capital Gains tax-free allowance is: £3,000"
+# Also confirmed by:
+#   https://www.gov.uk/capital-gains-tax/rates — "the 2025 to 2026 tax year the allowance is £3,000"
+
 examples:
   - description: "Annual exempt amount is £3,000"
+    # HMRC verbatim: "The Capital Gains tax-free allowance is: £3,000"
+    # Source: https://www.gov.uk/capital-gains-tax/allowances
+    source: "HMRC gov.uk/capital-gains-tax/allowances — verbatim 2025-26 value"
     inputs: {}
     expected: 3000
