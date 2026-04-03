@@ -1,0 +1,14 @@
+# Provenance: DWP "Benefit and pension rates 2026 to 2027" — new State Pension full rate
+# Source: https://assets.publishing.service.gov.uk/media/69931706ceeaa48d377f6bd5/Benefit-and-pension-rates-2026-2027.pdf
+# DWP table "State Pension", "New State Pension — Full rate": 2026/27 = £241.30/week
+# 4.8% triple-lock increase (earnings growth) from 2025/26 rate of £230.25/week.
+# Annual conversion: £241.30/week × 52 weeks = £12,547.60/year.
+# NOTE: the tolerance of 0.01 accommodates minor rounding in week-to-annual conversion.
+
+examples:
+  - description: "Full new state pension 2026-27 is £12,547.60/year (£241.30/week × 52)"
+    # 2026-27 DWP weekly rate: £241.30. Annual = £241.30 × 52 = £12,547.60.
+    source: "DWP — Benefit and pension rates 2026 to 2027, State Pension table, New State Pension full rate = £241.30/week (assets.publishing.service.gov.uk/media/69931706ceeaa48d377f6bd5/Benefit-and-pension-rates-2026-2027.pdf)"
+    inputs: {}
+    expected: 12547.60
+    tolerance: "0.01"
