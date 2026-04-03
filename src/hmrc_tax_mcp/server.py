@@ -11,18 +11,30 @@ import asyncio
 import json
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
+
+MCPServer: Any = None
+MCPStdioServer: Any = None
+MCPTextContent: Any = None
+MCPTool: Any = None
 
 try:
-    from mcp.server import Server
-    from mcp.server.stdio import stdio_server
-    from mcp.types import TextContent, Tool
+    from mcp.server import Server as _MCPServerImported
+    from mcp.server.stdio import stdio_server as _MCPStdioServerImported
+    from mcp.types import TextContent as _MCPTextContentImported
+    from mcp.types import Tool as _MCPToolImported
+    MCPServer = _MCPServerImported
+    MCPStdioServer = _MCPStdioServerImported
+    MCPTextContent = _MCPTextContentImported
+    MCPTool = _MCPToolImported
     _MCP_AVAILABLE = True
 except ImportError:
-    Server = None
-    stdio_server = None
     _MCP_AVAILABLE = False
 
+if _MCP_AVAILABLE:
+    TextContent = MCPTextContent
+    Tool = MCPTool
+else:
     @dataclass
     class TextContent:  # type: ignore[no-redef]
         type: str
@@ -43,7 +55,7 @@ from hmrc_tax_mcp.extractor.nl_extractor import NLExtractor
 from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
 from hmrc_tax_mcp.validation.pipeline import validate_rule as _validate_rule
 
-app = Server("hmrc-tax-mcp") if _MCP_AVAILABLE and Server is not None else None
+app = MCPServer("hmrc-tax-mcp") if _MCP_AVAILABLE else None
 
 
 def _json(data: Any) -> str:
@@ -55,7 +67,7 @@ def _json(data: Any) -> str:
     return json.dumps(data, default=_default, indent=2)
 
 
-async def handle_list_tools() -> list[Tool]:
+async def handle_list_tools() -> list[Any]:
     return [
         Tool(
             name="list_rules",
@@ -267,7 +279,7 @@ async def handle_list_tools() -> list[Tool]:
     ]
 
 
-async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
+async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[Any]:
     if name == "list_rules":
         rules = list_rules()
         data = [
@@ -472,17 +484,18 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
 
 
 if _MCP_AVAILABLE and app is not None:
-    handle_list_tools = app.list_tools()(handle_list_tools)
-    handle_call_tool = app.call_tool()(handle_call_tool)
+    app_runtime = cast(Any, app)
+    handle_list_tools = app_runtime.list_tools()(handle_list_tools)
+    handle_call_tool = app_runtime.call_tool()(handle_call_tool)
 
 
 async def _run() -> None:
-    if stdio_server is None or app is None:
+    if MCPStdioServer is None or app is None:
         raise RuntimeError(
             "MCP server requires Python >=3.10. "
             "Install with: pip install 'hmrc-tax-mcp[server]'"
         )
-    async with stdio_server() as (read_stream, write_stream):
+    async with MCPStdioServer() as (read_stream, write_stream):
         await app.run(
             read_stream, write_stream, app.create_initialization_options()
         )
