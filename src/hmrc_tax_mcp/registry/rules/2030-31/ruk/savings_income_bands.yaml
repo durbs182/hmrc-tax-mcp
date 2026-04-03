@@ -1,0 +1,177 @@
+rule_id: savings_income_bands
+version: "1.0.0"
+tax_year: "2030-31"
+jurisdiction: rUK
+title: Savings Income Bands (rUK 2030-31)
+description: >
+  Calculates income tax due on savings interest income for 2030-31. From 6 April 2027
+  (Finance Bill 2025-26) savings income is charged at separate rates: 22% basic,
+  42% higher, 47% additional — distinct from the main income tax rates (20/40/45%).
+  The Personal Savings Allowance is deducted before applying rates: £1,000 for basic-
+  rate taxpayers, £500 for higher-rate, £0 for additional-rate (determined by
+  `income_before`). Savings income rates are set at UK level and apply in Scotland
+  as well as rUK. Input variables: `savings_income` (gross savings interest before
+  the PSA) and `income_before` (gross income from prior streams — employment, property
+  — for band stacking and PSA tier determination). Thresholds frozen at 2021-22.
+dsl_source: |
+  let psa = if income_before > 125140 then 0 else if income_before > 50270 then 500 else 1000
+  let savings_taxable = max(savings_income - psa, 0)
+  let start = income_before
+  let end = income_before + savings_taxable
+  let basic_portion = max(min(end, 50270) - max(start, 12570), 0)
+  let higher_portion = max(min(end, 125140) - max(start, 50270), 0)
+  let additional_portion = max(end - max(start, 125140), 0)
+  return round(basic_portion * 0.22 + higher_portion * 0.42 + additional_portion * 0.47, 2)
+ast:
+  node: LET
+  bindings:
+  - - psa
+    - node: IF
+      cond:
+        node: GT
+        args:
+        - node: VAR
+          name: income_before
+        - node: CONST
+          value: 125140
+      then:
+        node: CONST
+        value: 0
+      else:
+        node: IF
+        cond:
+          node: GT
+          args:
+          - node: VAR
+            name: income_before
+          - node: CONST
+            value: 50270
+        then:
+          node: CONST
+          value: 500
+        else:
+          node: CONST
+          value: 1000
+  - - savings_taxable
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: savings_income
+        - node: VAR
+          name: psa
+      - node: CONST
+        value: 0
+  - - start
+    - node: VAR
+      name: income_before
+  - - end
+    - node: ADD
+      args:
+      - node: VAR
+        name: income_before
+      - node: VAR
+        name: savings_taxable
+  - - basic_portion
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: end
+          - node: CONST
+            value: 50270
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: start
+          - node: CONST
+            value: 12570
+      - node: CONST
+        value: 0
+  - - higher_portion
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: end
+          - node: CONST
+            value: 125140
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: start
+          - node: CONST
+            value: 50270
+      - node: CONST
+        value: 0
+  - - additional_portion
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: end
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: start
+          - node: CONST
+            value: 125140
+      - node: CONST
+        value: 0
+  body:
+    node: CALL
+    name: round
+    args:
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: MUL
+          args:
+          - node: VAR
+            name: basic_portion
+          - node: CONST
+            value: 0.22
+        - node: MUL
+          args:
+          - node: VAR
+            name: higher_portion
+          - node: CONST
+            value: 0.42
+      - node: MUL
+        args:
+        - node: VAR
+          name: additional_portion
+        - node: CONST
+          value: 0.47
+    - node: CONST
+      value: 2
+checksum: "f9e38bac8968610a1e04d710cfe21e0fb64e152fa263df1ed348852181ae4f2a"
+citations:
+  - label: "Finance Bill 2025-26 – property, savings and dividend income rates"
+    url: "https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income"
+  - label: "HMRC – Tax on savings interest"
+    url: "https://www.gov.uk/apply-tax-free-interest-on-savings"
+  - label: "HMRC – Income Tax rates and allowances: current and past"
+    url: "https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past"
+provenance: manual
+published_at: "2030-04-06T00:00:00Z"
+reviewed_by: null
+monetary_output: true

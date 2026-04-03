@@ -146,7 +146,9 @@ def test_is_higher_rate_taxpayer_checksum() -> None:
 
 
 def test_income_tax_due_checksum() -> None:
-    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    # Pin to 2026-27 — "latest" now resolves to the newest tax year (2030-31) because
+    # all income_tax_due versions are v1.0.0 and the 2027-28+ multi-stream rules were added.
+    entry = get_rule("income_tax_due", jurisdiction="rUK", tax_year="2026-27")
     assert entry is not None
     assert entry.checksum == "34ae672c2c67165e466a5e8e63526e3c6ea8515f8514f5edbf6057cab5452144"
 
@@ -188,16 +190,17 @@ def test_is_higher_rate_taxpayer_below_threshold() -> None:
 
 
 def test_income_tax_due_basic_rate_only() -> None:
-    """£30,000 income → effectivePA=12570, basic_band=17430 → tax £3,486."""
-    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    """£30,000 income → effectivePA=12570, basic_band=17430 → tax £3,486 (2026-27 rule)."""
+    # Pin to 2026-27: "latest" now resolves to 2030-31 (multi-stream rule with different inputs).
+    entry = get_rule("income_tax_due", jurisdiction="rUK", tax_year="2026-27")
     assert entry is not None
     result = Evaluator(variables={"adjusted_net_income": Decimal("30000")}).eval(entry.ast)
     assert result == Decimal("3486.00")
 
 
 def test_income_tax_due_higher_rate() -> None:
-    """£60,000 → basic £7,540 + higher £3,892 = £11,432."""
-    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    """£60,000 → basic £7,540 + higher £3,892 = £11,432 (2026-27 rule)."""
+    entry = get_rule("income_tax_due", jurisdiction="rUK", tax_year="2026-27")
     assert entry is not None
     result = Evaluator(variables={"adjusted_net_income": Decimal("60000")}).eval(entry.ast)
     # basic_band: 50270-12570=37700 @ 20% = 7540; higher_band: 60000-50270=9730 @ 40% = 3892
@@ -205,8 +208,8 @@ def test_income_tax_due_higher_rate() -> None:
 
 
 def test_income_tax_due_tapered_pa() -> None:
-    """£110k → effectivePA=7570, taxable=102430, basic_band=37700, higher_band=64730 → £33,432."""
-    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    """£110k → effectivePA=7570, taxable=102430, basic_band=37700, higher_band=64730 (2026-27)."""
+    entry = get_rule("income_tax_due", jurisdiction="rUK", tax_year="2026-27")
     assert entry is not None
     result = Evaluator(variables={"adjusted_net_income": Decimal("110000")}).eval(entry.ast)
     # taxable: 110000-7570=102430; basic: 37700*0.20=7540; higher: 64730*0.40=25892; total=33432
@@ -214,7 +217,7 @@ def test_income_tax_due_tapered_pa() -> None:
 
 
 def test_income_tax_due_zero_income() -> None:
-    entry = get_rule("income_tax_due", jurisdiction="rUK")
+    entry = get_rule("income_tax_due", jurisdiction="rUK", tax_year="2026-27")
     assert entry is not None
     result = Evaluator(variables={"adjusted_net_income": Decimal("0")}).eval(entry.ast)
     assert result == Decimal("0")

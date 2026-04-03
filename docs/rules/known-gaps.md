@@ -59,4 +59,73 @@ with a corresponding worked example and validation test.  Check:
 
 ---
 
+## Finance Bill 2025-26 – ISA cash limit reduction (2027-28)
+
+**Status:** Legislated (Finance Bill 2025-26), not yet modelled in this engine.
+
+**Trigger date:** 6 April 2027.
+
+**What changes:**
+From 2027-28 the annual ISA cash subscription limit falls from £20,000 to £12,000 within
+the overall £20,000 ISA allowance (so stocks-and-shares ISAs may receive the full £20,000 if
+no cash ISA contribution is made). Customers aged 65 and over retain a £20,000 cash ISA limit.
+
+**Why it matters to this engine:**
+There is currently no ISA allowance rule in the registry. If one is added in future, the
+2027-28 cash limit split should be reflected.
+
+**TODO:** When an `isa_allowance` rule family is added, create:
+- `isa_cash_limit` (2027-28+): £12,000 for under-65s, £20,000 for 65+
+- `isa_total_limit` (unchanged): £20,000
+- Update any composite rules that reference ISA headroom.
+
+**Sources:**
+- GOV.UK technical note: https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income/change-to-tax-rates-for-property-savings-and-dividend-income-technical-note
+
+---
+
+## Finance Bill 2025-26 – Scotland property income rates (2027-28)
+
+**Status:** Scottish Parliament jurisdiction — not covered by rUK rules.
+
+**Trigger date:** 6 April 2027.
+
+**What changes:**
+The Finance Bill 2025-26 introduces separate property income tax rates for rUK
+(England, Wales, Northern Ireland) of 22% / 42% / 47%. Property income taxation in
+Scotland remains the responsibility of the Scottish Parliament; the Scottish rate for
+property income has not yet been set for 2027-28.
+
+**Why it matters to this engine:**
+`property_income_bands` rules exist for rUK only (2027-28+). Scotland has no equivalent
+rule. Any composite Scottish income tax rule that includes property income cannot be
+completed until the Scottish Parliament publishes its rates.
+
+**TODO:** Monitor Scottish Parliament Finance Bill announcements. Once published, add:
+- `property_income_bands` for `scotland` jurisdiction (2027-28+)
+- If a Scottish `income_tax_due` composite is added, update it to include property income.
+
+**Sources:**
+- GOV.UK technical note: https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income/change-to-tax-rates-for-property-savings-and-dividend-income-technical-note
+
+---
+
+## Scotland – no composite income_tax_due rule
+
+**Status:** Architectural gap — not modelled.
+
+**What is missing:**
+Scotland has no `income_tax_due` rule in any tax year. The Scottish income tax bands
+(`income_tax_bands`, jurisdiction=scotland) exist and cover employment/trading income,
+but there is no Scottish composite rule that combines the PA taper with band application,
+nor one that handles savings and dividend income (which use UK rates).
+
+**TODO:** Once requirements are clear, add `income_tax_due` for Scotland that:
+- Uses Scottish employment income bands (starter/basic/intermediate/higher/advanced)
+- Uses UK rates for savings income (savings_income_bands, same rules as rUK)
+- Uses UK rates for dividend income (dividend_income_bands, same rules as rUK)
+- Applies PA in the statutory ordering (employment → property → savings → dividends)
+
+---
+
 *Add new entries above this line in reverse-chronological order.*
