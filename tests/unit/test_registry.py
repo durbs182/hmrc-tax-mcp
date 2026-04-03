@@ -118,7 +118,7 @@ def test_state_pension_annual() -> None:
     entry = get_rule("state_pension_annual", jurisdiction="rUK")
     assert entry is not None
     result = Evaluator().eval(entry.ast)
-    assert result == Decimal("11502.40")
+    assert result == Decimal("11973.00")
 
 
 # ---------------------------------------------------------------------------

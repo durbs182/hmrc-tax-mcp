@@ -1,19 +1,13 @@
-# Provenance: HMRC-published new State Pension weekly rate for 2025-26, converted to annual.
-# Source: https://www.gov.uk/new-state-pension/what-youll-get
-# Note: the gov.uk page is updated annually each April. The 2025-26 rate used in this
-# rule (£221.20/week) was the rate in force from April 2025 to April 2026.
-# The current gov.uk page (as of April 2026) shows £230.25/week (the 2026-27 rate).
-# If the state_pension_annual rule is updated for 2026-27, the expected value should be
-# £230.25 × 52 = £11,973.00.
-# Annual conversion: £221.20/week × 52 weeks = £11,502.40/year.
+# Provenance: DWP "Benefit and pension rates 2025 to 2026" — new State Pension full rate
+# Source: https://www.gov.uk/government/publications/benefit-and-pension-rates-2025-to-2026/benefit-and-pension-rates-2025-to-2026
+# DWP table "State Pension", "New State Pension — Full rate": 2025/26 = £230.25/week
+# Annual conversion: £230.25/week × 52 weeks = £11,973.00/year.
 # NOTE: the tolerance of 0.01 accommodates minor rounding in week-to-annual conversion.
 
 examples:
-  - description: "Full new state pension 2025-26 is £11,502.40/year (£221.20/week × 52)"
-    # 2025-26 DWP weekly rate: £221.20. Annual = £221.20 × 52 = £11,502.40.
-    # Source: https://www.gov.uk/new-state-pension/what-youll-get (2025-26 rate,
-    # superseded by £230.25/week from April 2026).
-    source: "HMRC/DWP gov.uk/new-state-pension/what-youll-get — 2025-26 weekly rate £221.20"
+  - description: "Full new state pension 2025-26 is £11,973.00/year (£230.25/week × 52)"
+    # 2025-26 DWP weekly rate: £230.25. Annual = £230.25 × 52 = £11,973.00.
+    source: "DWP — Benefit and pension rates 2025 to 2026, State Pension table, New State Pension full rate = £230.25/week (gov.uk/government/publications/benefit-and-pension-rates-2025-to-2026)"
     inputs: {}
-    expected: 11502.40
+    expected: 11973.00
     tolerance: "0.01"
