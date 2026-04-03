@@ -1,0 +1,64 @@
+# Provenance: HMRC PTM057200 and Finance (No. 2) Act 2023 s.18.
+# Standard Annual Allowance = £60,000 (from 6 April 2023).
+# Threshold income limit = £200,000; Adjusted income limit = £260,000.
+# Taper rate: £1 reduction per £2 of adjusted income above £260,000.
+# Minimum tapered AA = £10,000 (reached when adjusted income ≥ £360,000).
+# Source: https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm057200
+
+examples:
+  - description: "Threshold income below limit (£150,000) — no taper, standard AA £60,000"
+    # HMRC: taper cannot apply if threshold income is £200,000 or less.
+    source: "HMRC PTM057200 — threshold income gate"
+    inputs:
+      threshold_income: 150000
+      adjusted_income: 220000
+    expected: 60000
+
+  - description: "Threshold income exactly £200,000 — no taper (limit is strictly greater than)"
+    # HMRC: threshold income must exceed £200,000 for taper to trigger.
+    source: "HMRC PTM057200 — boundary: threshold_income = £200,000 does NOT trigger taper"
+    inputs:
+      threshold_income: 200000
+      adjusted_income: 300000
+    expected: 60000
+
+  - description: "Both inputs above limits but adjusted income exactly £260,000 — no taper"
+    # HMRC: taper only reduces AA when adjusted income exceeds £260,000.
+    source: "HMRC PTM057200 — adjusted income at limit, no excess"
+    inputs:
+      threshold_income: 210000
+      adjusted_income: 260000
+    expected: 60000
+
+  - description: "Adjusted income £280,000 — tapered AA £50,000"
+    # Derivation: excess = £280,000 - £260,000 = £20,000; reduction = £10,000; AA = £50,000.
+    source: "arithmetic from HMRC-stated taper rule (PTM057200)"
+    inputs:
+      threshold_income: 210000
+      adjusted_income: 280000
+    expected: 50000
+
+  - description: "Adjusted income £320,000 — tapered AA £30,000"
+    # Derivation: excess = £60,000; reduction = £30,000; AA = £30,000.
+    source: "arithmetic from HMRC-stated taper rule (PTM057200)"
+    inputs:
+      threshold_income: 250000
+      adjusted_income: 320000
+    expected: 30000
+
+  - description: "Adjusted income £360,000 — tapered AA at minimum floor £10,000"
+    # HMRC: minimum tapered AA is £10,000, reached at adjusted income of £360,000.
+    # Derivation: excess = £100,000; reduction = £50,000; 60,000 - 50,000 = £10,000.
+    source: "HMRC PTM057200 — minimum floor"
+    inputs:
+      threshold_income: 300000
+      adjusted_income: 360000
+    expected: 10000
+
+  - description: "Adjusted income £420,000 — AA capped at minimum floor £10,000"
+    # Derivation: excess = £160,000; reduction = £80,000; 60,000 - 80,000 < 0 → floor £10,000.
+    source: "HMRC PTM057200 — minimum floor applied above £360,000"
+    inputs:
+      threshold_income: 350000
+      adjusted_income: 420000
+    expected: 10000
