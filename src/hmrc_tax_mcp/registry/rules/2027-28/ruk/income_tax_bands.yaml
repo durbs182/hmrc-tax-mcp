@@ -4,10 +4,13 @@ tax_year: "2027-28"
 jurisdiction: rUK
 title: Income Tax Bands (rUK 2027-28)
 description: >
-  Applies the 2027-28 rUK income tax bands to post-personal-allowance taxable income.
-  All thresholds are frozen at 2021-22 levels under the threshold freeze legislated
-  to run until 5 April 2031. Input variable `taxable_income` must be income AFTER
-  deduction of the personal allowance (i.e. apply pa_taper first).
+  Applies the 2027-28 rUK income tax bands to gross employment, trading and pension
+  income. From 6 April 2027, property income and savings income are taxed at
+  separate rates (see property_income_bands and savings_income_bands); this rule
+  covers only non-property, non-savings, non-dividend income. All thresholds are
+  frozen at 2021-22 levels under the threshold freeze legislated to run until
+  5 April 2031. Input variable `taxable_income` is gross income (the personal
+  allowance is embedded in the band start at £12,570).
 dsl_source: |
   bands taxable_income:
     12570  to 50270  at 20%

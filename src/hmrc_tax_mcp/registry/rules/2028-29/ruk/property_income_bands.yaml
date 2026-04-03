@@ -1,0 +1,137 @@
+rule_id: property_income_bands
+version: "1.0.0"
+tax_year: "2028-29"
+jurisdiction: rUK
+title: Property Income Bands (rUK 2028-29)
+description: >
+  Calculates income tax due on property (rental) income for 2028-29. From 6 April 2027
+  (Finance Bill 2025-26) property income is charged at separate rates: 22% basic,
+  42% higher, 47% additional — distinct from the main income tax rates (20/40/45%).
+  Applies to England, Wales, and Northern Ireland only — property income rates in
+  Scotland are set by the Scottish Parliament separately. The personal allowance must
+  be applied against employment/trading income first (by the caller); supply gross
+  property income here. Property income shares band thresholds with other income
+  streams; the rule positions it using `income_before`. Input variables:
+  `property_income` (gross rental income) and `income_before` (gross employment/
+  trading income — for band positioning). Thresholds frozen at 2021-22 levels.
+dsl_source: |
+  let start = income_before
+  let end = income_before + property_income
+  let basic_portion = max(min(end, 50270) - max(start, 12570), 0)
+  let higher_portion = max(min(end, 125140) - max(start, 50270), 0)
+  let additional_portion = max(end - max(start, 125140), 0)
+  return round(basic_portion * 0.22 + higher_portion * 0.42 + additional_portion * 0.47, 2)
+ast:
+  node: LET
+  bindings:
+  - - start
+    - node: VAR
+      name: income_before
+  - - end
+    - node: ADD
+      args:
+      - node: VAR
+        name: income_before
+      - node: VAR
+        name: property_income
+  - - basic_portion
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: end
+          - node: CONST
+            value: 50270
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: start
+          - node: CONST
+            value: 12570
+      - node: CONST
+        value: 0
+  - - higher_portion
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: end
+          - node: CONST
+            value: 125140
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: start
+          - node: CONST
+            value: 50270
+      - node: CONST
+        value: 0
+  - - additional_portion
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: end
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: start
+          - node: CONST
+            value: 125140
+      - node: CONST
+        value: 0
+  body:
+    node: CALL
+    name: round
+    args:
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: MUL
+          args:
+          - node: VAR
+            name: basic_portion
+          - node: CONST
+            value: 0.22
+        - node: MUL
+          args:
+          - node: VAR
+            name: higher_portion
+          - node: CONST
+            value: 0.42
+      - node: MUL
+        args:
+        - node: VAR
+          name: additional_portion
+        - node: CONST
+          value: 0.47
+    - node: CONST
+      value: 2
+checksum: "d87f48fe76eac24873679a2e7eae14a1178bbe5c565d91c78b61f6b8dd1e6495"
+citations:
+  - label: "Finance Bill 2025-26 – property, savings and dividend income rates"
+    url: "https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income"
+  - label: "HMRC – Tax on property income"
+    url: "https://www.gov.uk/tax-on-income-from-renting"
+  - label: "HMRC – Income Tax rates and allowances: current and past"
+    url: "https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past"
+provenance: manual
+published_at: "2028-04-06T00:00:00Z"
+reviewed_by: null
+monetary_output: true

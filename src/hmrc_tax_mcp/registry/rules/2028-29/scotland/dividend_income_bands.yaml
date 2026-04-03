@@ -1,0 +1,142 @@
+rule_id: dividend_income_bands
+version: 1.0.0
+tax_year: 2028-29
+jurisdiction: scotland
+title: Dividend Income Bands (Scotland 2028-29)
+description: 'Calculates income tax due on dividend income for 2028-29. Applies the £500 dividend allowance (tax-free) then
+  taxes the remainder at: 10.75% ordinary (basic-rate band), 35.75% upper (higher-rate band), or 39.35% additional rate. Rates
+  unchanged from 2026-27 (Finance Bill 2025-26). Savings and dividend income rates are set at UK level and apply in Scotland
+  as well as rUK. Input variables: `dividend_income` (gross dividend income before the allowance) and `income_before` (gross
+  income from all prior income streams for band positioning). Thresholds frozen at 2021-22 levels.
+
+  '
+dsl_source: "  let div_allowance = min(dividend_income, 500)\n  let start = income_before + div_allowance\n  let end = income_before\
+  \ + dividend_income\n  let basic_portion = max(min(end, 50270) - max(start, 12570), 0)\n  let upper_portion = max(min(end,\
+  \ 125140) - max(start, 50270), 0)\n  let additional_portion = max(end - max(start, 125140), 0)\n  return round(basic_portion\
+  \ * 0.1075 + upper_portion * 0.3575 + additional_portion * 0.3935, 2)\n"
+ast:
+  node: LET
+  bindings:
+  - - div_allowance
+    - node: CALL
+      name: min
+      args:
+      - node: VAR
+        name: dividend_income
+      - node: CONST
+        value: 500
+  - - start
+    - node: ADD
+      args:
+      - node: VAR
+        name: income_before
+      - node: VAR
+        name: div_allowance
+  - - end
+    - node: ADD
+      args:
+      - node: VAR
+        name: income_before
+      - node: VAR
+        name: dividend_income
+  - - basic_portion
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: end
+          - node: CONST
+            value: 50270
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: start
+          - node: CONST
+            value: 12570
+      - node: CONST
+        value: 0
+  - - upper_portion
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: end
+          - node: CONST
+            value: 125140
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: start
+          - node: CONST
+            value: 50270
+      - node: CONST
+        value: 0
+  - - additional_portion
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: end
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: start
+          - node: CONST
+            value: 125140
+      - node: CONST
+        value: 0
+  body:
+    node: CALL
+    name: round
+    args:
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: MUL
+          args:
+          - node: VAR
+            name: basic_portion
+          - node: CONST
+            value: 0.1075
+        - node: MUL
+          args:
+          - node: VAR
+            name: upper_portion
+          - node: CONST
+            value: 0.3575
+      - node: MUL
+        args:
+        - node: VAR
+          name: additional_portion
+        - node: CONST
+          value: 0.3935
+    - node: CONST
+      value: 2
+checksum: 100a92f26b20f2348c4653ad3c3fd4bdeba608d9639ef5b322ca4329f3e10608
+citations:
+- label: HMRC – Tax on dividends
+  url: https://www.gov.uk/tax-on-dividends
+- label: Finance Bill 2025-26 – property, savings and dividend income rates
+  url: https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income
+- label: 'HMRC – Income Tax rates and allowances: current and past'
+  url: https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past
+provenance: manual
+published_at: '2028-04-06T00:00:00Z'
+reviewed_by: null
+monetary_output: true

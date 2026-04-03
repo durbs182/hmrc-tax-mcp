@@ -1,0 +1,611 @@
+rule_id: income_tax_due
+version: 1.0.0
+tax_year: 2028-29
+jurisdiction: rUK
+title: Income Tax Due – Multi-Stream Composite (rUK 2028-29)
+description: 'Calculates total income tax due for 2028-29 across all four income streams, reflecting the new ordering rules
+  effective from 6 April 2027 (Finance Bill 2025-26). Employment and trading income: taxed at 20/40/45%. Property income:
+  taxed at 22/42/47%. Savings interest: taxed at 22/42/47%. Dividends: taxed at 10.75/35.75/39.35%. The personal allowance
+  (£12,570, tapered above £100,000) is allocated against income in statutory order: employment first, then property, then
+  savings, then dividends. The Personal Savings Allowance (£1,000 basic-rate / £500 higher-rate / £0 additional-rate) and
+  £500 dividend allowance are modelled as 0% bands that still consume band space. PSA tiering is determined from pre-allowance
+  total taxable income (all four streams) so savings or dividends that push the taxpayer into a higher rate band are correctly
+  reflected. All income streams share the same rate-band thresholds (basic-rate band £37,700 wide; higher rate up to £125,140
+  gross) but are taxed at their category rates — band space consumed in order: employment → property → savings → dividends.
+  Applies to rUK (England, Wales, Northern Ireland). Scottish residents use Scottish rates for employment income but UK rates
+  for savings and dividends. ISA income excluded by convention. Input variables: `employment_income`, `property_income`, `savings_income`,
+  `dividend_income` (all gross, before personal allowance deduction). Pass 0 for absent income streams.
+
+  '
+dsl_source: "  let total_income = employment_income + property_income + savings_income + dividend_income\n  let effective_pa\
+  \ = taper total_income:\n    threshold 100000\n    ratio 1 per 2\n    base 12570\n  let emp_pa = min(effective_pa, employment_income)\n\
+  \  let emp_taxable = employment_income - emp_pa\n  let pa_after_emp = effective_pa - emp_pa\n  let prop_pa = min(pa_after_emp,\
+  \ property_income)\n  let prop_taxable = property_income - prop_pa\n  let pa_after_prop = pa_after_emp - prop_pa\n  let\
+  \ sav_pa = min(pa_after_prop, savings_income)\n  let sav_gross = savings_income - sav_pa\n  let pa_after_sav = pa_after_prop\
+  \ - sav_pa\n  let div_pa = min(pa_after_sav, dividend_income)\n  let div_gross = dividend_income - div_pa\n  let higher_limit\
+  \ = max(125140 - effective_pa, 0)\n  let pre_allowance_taxable = emp_taxable + prop_taxable + sav_gross + div_gross\n  let\
+  \ psa = if pre_allowance_taxable > higher_limit then 0 else if pre_allowance_taxable > 37700 then 500 else 1000\n  let psa_band\
+  \ = min(sav_gross, psa)\n  let sav_after_psa = max(sav_gross - psa, 0)\n  let da_band = min(div_gross, 500)\n  let div_after_da\
+  \ = max(div_gross - 500, 0)\n  let emp_basic = min(emp_taxable, 37700)\n  let emp_higher = max(min(emp_taxable, higher_limit)\
+  \ - 37700, 0)\n  let emp_additional = max(emp_taxable - higher_limit, 0)\n  let emp_tax = emp_basic * 0.20 + emp_higher\
+  \ * 0.40 + emp_additional * 0.45\n  let prop_stk_end = emp_taxable + prop_taxable\n  let prop_basic = max(min(prop_stk_end,\
+  \ 37700) - emp_taxable, 0)\n  let prop_higher = max(min(prop_stk_end, higher_limit) - max(emp_taxable, 37700), 0)\n  let\
+  \ prop_additional = max(prop_stk_end - max(emp_taxable, higher_limit), 0)\n  let prop_tax = prop_basic * 0.22 + prop_higher\
+  \ * 0.42 + prop_additional * 0.47\n  let sav_psa_end = prop_stk_end + psa_band\n  let sav_end = sav_psa_end + sav_after_psa\n\
+  \  let sav_basic = max(min(sav_end, 37700) - sav_psa_end, 0)\n  let sav_higher = max(min(sav_end, higher_limit) - max(sav_psa_end,\
+  \ 37700), 0)\n  let sav_additional = max(sav_end - max(sav_psa_end, higher_limit), 0)\n  let sav_tax = sav_basic * 0.22\
+  \ + sav_higher * 0.42 + sav_additional * 0.47\n  let div_da_end = sav_end + da_band\n  let div_end = div_da_end + div_after_da\n\
+  \  let div_basic = max(min(div_end, 37700) - div_da_end, 0)\n  let div_higher = max(min(div_end, higher_limit) - max(div_da_end,\
+  \ 37700), 0)\n  let div_additional = max(div_end - max(div_da_end, higher_limit), 0)\n  let div_tax = div_basic * 0.1075\
+  \ + div_higher * 0.3575 + div_additional * 0.3935\n  return round(emp_tax + prop_tax + sav_tax + div_tax, 2)\n"
+ast:
+  node: LET
+  bindings:
+  - - total_income
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: ADD
+          args:
+          - node: VAR
+            name: employment_income
+          - node: VAR
+            name: property_income
+        - node: VAR
+          name: savings_income
+      - node: VAR
+        name: dividend_income
+  - - effective_pa
+    - node: TAPER
+      args:
+      - node: VAR
+        name: total_income
+      threshold:
+        node: CONST
+        value: 100000
+      ratio:
+        node: CONST
+        value: 0.5
+      base:
+        node: CONST
+        value: 12570
+  - - emp_pa
+    - node: CALL
+      name: min
+      args:
+      - node: VAR
+        name: effective_pa
+      - node: VAR
+        name: employment_income
+  - - emp_taxable
+    - node: SUB
+      args:
+      - node: VAR
+        name: employment_income
+      - node: VAR
+        name: emp_pa
+  - - pa_after_emp
+    - node: SUB
+      args:
+      - node: VAR
+        name: effective_pa
+      - node: VAR
+        name: emp_pa
+  - - prop_pa
+    - node: CALL
+      name: min
+      args:
+      - node: VAR
+        name: pa_after_emp
+      - node: VAR
+        name: property_income
+  - - prop_taxable
+    - node: SUB
+      args:
+      - node: VAR
+        name: property_income
+      - node: VAR
+        name: prop_pa
+  - - pa_after_prop
+    - node: SUB
+      args:
+      - node: VAR
+        name: pa_after_emp
+      - node: VAR
+        name: prop_pa
+  - - sav_pa
+    - node: CALL
+      name: min
+      args:
+      - node: VAR
+        name: pa_after_prop
+      - node: VAR
+        name: savings_income
+  - - sav_gross
+    - node: SUB
+      args:
+      - node: VAR
+        name: savings_income
+      - node: VAR
+        name: sav_pa
+  - - pa_after_sav
+    - node: SUB
+      args:
+      - node: VAR
+        name: pa_after_prop
+      - node: VAR
+        name: sav_pa
+  - - div_pa
+    - node: CALL
+      name: min
+      args:
+      - node: VAR
+        name: pa_after_sav
+      - node: VAR
+        name: dividend_income
+  - - div_gross
+    - node: SUB
+      args:
+      - node: VAR
+        name: dividend_income
+      - node: VAR
+        name: div_pa
+  - - higher_limit
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CONST
+          value: 125140
+        - node: VAR
+          name: effective_pa
+      - node: CONST
+        value: 0
+  - - pre_allowance_taxable
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: ADD
+          args:
+          - node: VAR
+            name: emp_taxable
+          - node: VAR
+            name: prop_taxable
+        - node: VAR
+          name: sav_gross
+      - node: VAR
+        name: div_gross
+  - - psa
+    - node: IF
+      cond:
+        node: GT
+        args:
+        - node: VAR
+          name: pre_allowance_taxable
+        - node: VAR
+          name: higher_limit
+      then:
+        node: CONST
+        value: 0
+      else:
+        node: IF
+        cond:
+          node: GT
+          args:
+          - node: VAR
+            name: pre_allowance_taxable
+          - node: CONST
+            value: 37700
+        then:
+          node: CONST
+          value: 500
+        else:
+          node: CONST
+          value: 1000
+  - - psa_band
+    - node: CALL
+      name: min
+      args:
+      - node: VAR
+        name: sav_gross
+      - node: VAR
+        name: psa
+  - - sav_after_psa
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: sav_gross
+        - node: VAR
+          name: psa
+      - node: CONST
+        value: 0
+  - - da_band
+    - node: CALL
+      name: min
+      args:
+      - node: VAR
+        name: div_gross
+      - node: CONST
+        value: 500
+  - - div_after_da
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: div_gross
+        - node: CONST
+          value: 500
+      - node: CONST
+        value: 0
+  - - emp_basic
+    - node: CALL
+      name: min
+      args:
+      - node: VAR
+        name: emp_taxable
+      - node: CONST
+        value: 37700
+  - - emp_higher
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: emp_taxable
+          - node: VAR
+            name: higher_limit
+        - node: CONST
+          value: 37700
+      - node: CONST
+        value: 0
+  - - emp_additional
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: emp_taxable
+        - node: VAR
+          name: higher_limit
+      - node: CONST
+        value: 0
+  - - emp_tax
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: MUL
+          args:
+          - node: VAR
+            name: emp_basic
+          - node: CONST
+            value: 0.2
+        - node: MUL
+          args:
+          - node: VAR
+            name: emp_higher
+          - node: CONST
+            value: 0.4
+      - node: MUL
+        args:
+        - node: VAR
+          name: emp_additional
+        - node: CONST
+          value: 0.45
+  - - prop_stk_end
+    - node: ADD
+      args:
+      - node: VAR
+        name: emp_taxable
+      - node: VAR
+        name: prop_taxable
+  - - prop_basic
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: prop_stk_end
+          - node: CONST
+            value: 37700
+        - node: VAR
+          name: emp_taxable
+      - node: CONST
+        value: 0
+  - - prop_higher
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: prop_stk_end
+          - node: VAR
+            name: higher_limit
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: emp_taxable
+          - node: CONST
+            value: 37700
+      - node: CONST
+        value: 0
+  - - prop_additional
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: prop_stk_end
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: emp_taxable
+          - node: VAR
+            name: higher_limit
+      - node: CONST
+        value: 0
+  - - prop_tax
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: MUL
+          args:
+          - node: VAR
+            name: prop_basic
+          - node: CONST
+            value: 0.22
+        - node: MUL
+          args:
+          - node: VAR
+            name: prop_higher
+          - node: CONST
+            value: 0.42
+      - node: MUL
+        args:
+        - node: VAR
+          name: prop_additional
+        - node: CONST
+          value: 0.47
+  - - sav_psa_end
+    - node: ADD
+      args:
+      - node: VAR
+        name: prop_stk_end
+      - node: VAR
+        name: psa_band
+  - - sav_end
+    - node: ADD
+      args:
+      - node: VAR
+        name: sav_psa_end
+      - node: VAR
+        name: sav_after_psa
+  - - sav_basic
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: sav_end
+          - node: CONST
+            value: 37700
+        - node: VAR
+          name: sav_psa_end
+      - node: CONST
+        value: 0
+  - - sav_higher
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: sav_end
+          - node: VAR
+            name: higher_limit
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: sav_psa_end
+          - node: CONST
+            value: 37700
+      - node: CONST
+        value: 0
+  - - sav_additional
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: sav_end
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: sav_psa_end
+          - node: VAR
+            name: higher_limit
+      - node: CONST
+        value: 0
+  - - sav_tax
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: MUL
+          args:
+          - node: VAR
+            name: sav_basic
+          - node: CONST
+            value: 0.22
+        - node: MUL
+          args:
+          - node: VAR
+            name: sav_higher
+          - node: CONST
+            value: 0.42
+      - node: MUL
+        args:
+        - node: VAR
+          name: sav_additional
+        - node: CONST
+          value: 0.47
+  - - div_da_end
+    - node: ADD
+      args:
+      - node: VAR
+        name: sav_end
+      - node: VAR
+        name: da_band
+  - - div_end
+    - node: ADD
+      args:
+      - node: VAR
+        name: div_da_end
+      - node: VAR
+        name: div_after_da
+  - - div_basic
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: div_end
+          - node: CONST
+            value: 37700
+        - node: VAR
+          name: div_da_end
+      - node: CONST
+        value: 0
+  - - div_higher
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: div_end
+          - node: VAR
+            name: higher_limit
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: div_da_end
+          - node: CONST
+            value: 37700
+      - node: CONST
+        value: 0
+  - - div_additional
+    - node: CALL
+      name: max
+      args:
+      - node: SUB
+        args:
+        - node: VAR
+          name: div_end
+        - node: CALL
+          name: max
+          args:
+          - node: VAR
+            name: div_da_end
+          - node: VAR
+            name: higher_limit
+      - node: CONST
+        value: 0
+  - - div_tax
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: MUL
+          args:
+          - node: VAR
+            name: div_basic
+          - node: CONST
+            value: 0.1075
+        - node: MUL
+          args:
+          - node: VAR
+            name: div_higher
+          - node: CONST
+            value: 0.3575
+      - node: MUL
+        args:
+        - node: VAR
+          name: div_additional
+        - node: CONST
+          value: 0.3935
+  body:
+    node: CALL
+    name: round
+    args:
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: ADD
+          args:
+          - node: VAR
+            name: emp_tax
+          - node: VAR
+            name: prop_tax
+        - node: VAR
+          name: sav_tax
+      - node: VAR
+        name: div_tax
+    - node: CONST
+      value: 2
+checksum: ef9535dac5c28446c7e52c9068a622e38db8193381775fb7a5b55acc771a80b9
+citations:
+- label: Finance Bill 2025-26 – property, savings and dividend income rates
+  url: https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income
+- label: HMRC – Income Tax rates and Personal Allowances
+  url: https://www.gov.uk/income-tax-rates
+- label: ITA 2007 s.35 – Deduction of personal allowance
+  url: https://www.legislation.gov.uk/ukpga/2007/3/section/35
+provenance: manual
+published_at: '2028-04-06T00:00:00Z'
+reviewed_by: null
+monetary_output: true
