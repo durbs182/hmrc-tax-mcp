@@ -66,6 +66,10 @@ async def handle_list_tools() -> list[Tool]:
                         "type": "string",
                         "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
+                    "tax_year": {
+                        "type": "string",
+                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
+                    },
                 },
                 "required": ["rule_id"],
             },
@@ -84,6 +88,10 @@ async def handle_list_tools() -> list[Tool]:
                     "jurisdiction": {
                         "type": "string",
                         "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
+                    },
+                    "tax_year": {
+                        "type": "string",
+                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
                     },
                     "inputs": {
                         "type": "object",
@@ -142,6 +150,10 @@ async def handle_list_tools() -> list[Tool]:
                         "type": "string",
                         "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
+                    "tax_year": {
+                        "type": "string",
+                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
+                    },
                 },
                 "required": ["rule_id"],
             },
@@ -165,6 +177,10 @@ async def handle_list_tools() -> list[Tool]:
                         "type": "string",
                         "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
                     },
+                    "tax_year": {
+                        "type": "string",
+                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
+                    },
                 },
                 "required": ["rule_id"],
             },
@@ -184,6 +200,10 @@ async def handle_list_tools() -> list[Tool]:
                     "jurisdiction": {
                         "type": "string",
                         "description": "Defaults to 'rUK'. Pass 'scotland' for Scottish tax rules.",
+                    },
+                    "tax_year": {
+                        "type": "string",
+                        "description": "e.g. '2025-26'. Required when version is explicit and multiple tax years share the same version.",
                     },
                     "inputs": {
                         "type": "object",
@@ -242,6 +262,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 arguments["rule_id"],
                 arguments.get("version", "latest"),
                 jurisdiction=arguments.get("jurisdiction"),
+                tax_year=arguments.get("tax_year"),
             )
         except ValueError as exc:
             return [TextContent(type="text", text=_json({"error": str(exc)}))]
@@ -255,6 +276,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 arguments["rule_id"],
                 arguments.get("version", "latest"),
                 jurisdiction=arguments.get("jurisdiction"),
+                tax_year=arguments.get("tax_year"),
             )
         except ValueError as exc:
             return [TextContent(type="text", text=_json({"error": str(exc)}))]
@@ -306,6 +328,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 arguments["rule_id"],
                 arguments.get("version", "latest"),
                 jurisdiction=arguments.get("jurisdiction"),
+                tax_year=arguments.get("tax_year"),
             )
         except ValueError as exc:
             return [TextContent(type="text", text=_json({"error": str(exc)}))]
@@ -334,6 +357,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 arguments["rule_id"],
                 arguments.get("version", "latest"),
                 jurisdiction=arguments.get("jurisdiction"),
+                tax_year=arguments.get("tax_year"),
             )
         except ValueError as exc:
             return [TextContent(type="text", text=_json({"error": str(exc)}))]
@@ -348,6 +372,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 arguments["rule_id"],
                 arguments.get("version", "latest"),
                 jurisdiction=arguments.get("jurisdiction"),
+                tax_year=arguments.get("tax_year"),
             )
         except ValueError as exc:
             return [TextContent(type="text", text=_json({"error": str(exc)}))]

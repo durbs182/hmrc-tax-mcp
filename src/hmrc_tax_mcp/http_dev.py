@@ -96,6 +96,7 @@ async def call_tool(req: CallReq) -> Any:
                 arguments["rule_id"],
                 arguments.get("version", "latest"),
                 jurisdiction=arguments.get("jurisdiction"),
+                tax_year=arguments.get("tax_year"),
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
@@ -118,6 +119,7 @@ async def call_tool(req: CallReq) -> Any:
                 arguments["rule_id"],
                 arguments.get("version", "latest"),
                 jurisdiction=arguments.get("jurisdiction"),
+                tax_year=arguments.get("tax_year"),
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
@@ -161,6 +163,7 @@ async def call_tool(req: CallReq) -> Any:
                 arguments["rule_id"],
                 arguments.get("version", "latest"),
                 jurisdiction=arguments.get("jurisdiction"),
+                tax_year=arguments.get("tax_year"),
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
@@ -192,6 +195,7 @@ async def call_tool(req: CallReq) -> Any:
                 arguments["rule_id"],
                 arguments.get("version", "latest"),
                 jurisdiction=arguments.get("jurisdiction"),
+                tax_year=arguments.get("tax_year"),
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))

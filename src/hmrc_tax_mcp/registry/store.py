@@ -53,6 +53,7 @@ def get_rule(
     rule_id: str,
     version: str = "latest",
     jurisdiction: str | None = None,
+    tax_year: str | None = None,
 ) -> RuleEntry | None:
     """
     Look up a rule by ID and version. 'latest' returns the highest semver version.
@@ -61,6 +62,11 @@ def get_rule(
     exists for both ``rUK`` and ``scotland``), pass ``jurisdiction`` to disambiguate.
     Omitting ``jurisdiction`` when multiple jurisdictions match raises ValueError
     to prevent accidentally returning the wrong jurisdiction's rule.
+
+    When multiple tax years publish the same rule_id/version/jurisdiction,
+    pass ``tax_year`` to select a specific year. For ``version='latest'``, ties
+    are broken by returning the entry with the newest tax_year. For an explicit
+    version, omitting ``tax_year`` when multiple years match raises ValueError.
     """
     if not _loaded:
         load_all_rules()
@@ -70,16 +76,25 @@ def get_rule(
             e for e in _registry.values()
             if e.rule_id == rule_id and e.version == version
             and (jurisdiction is None or e.jurisdiction == jurisdiction)
+            and (tax_year is None or e.tax_year == tax_year)
         ]
-        if len(matches) > 1 and jurisdiction is None:
+        if jurisdiction is None and len(matches) > 1:
             ruk_matches = [e for e in matches if e.jurisdiction == "rUK"]
             matches = ruk_matches if ruk_matches else matches
+        if tax_year is None and len(matches) > 1:
+            tax_years = {e.tax_year for e in matches}
+            if len(tax_years) > 1:
+                raise ValueError(
+                    f"Rule {rule_id!r} version {version!r} exists in multiple tax years "
+                    f"({sorted(tax_years)}). Pass tax_year= to disambiguate."
+                )
         return matches[0] if matches else None
 
     matches = [
         e for e in _registry.values()
         if e.rule_id == rule_id
         and (jurisdiction is None or e.jurisdiction == jurisdiction)
+        and (tax_year is None or e.tax_year == tax_year)
     ]
     if not matches:
         return None
@@ -94,7 +109,8 @@ def get_rule(
             ruk_matches = [e for e in matches if e.jurisdiction == "rUK"]
             matches = ruk_matches if ruk_matches else matches
 
-    return sorted(matches, key=lambda e: _semver_key(e.version))[-1]
+    # Sort by (semver, tax_year) so the newest year wins when versions tie.
+    return sorted(matches, key=lambda e: (_semver_key(e.version), e.tax_year))[-1]
 
 
 def list_rules() -> list[RuleEntry]:
