@@ -22,8 +22,8 @@ def _rules_dir() -> Path:
     return Path(__file__).parent / "rules"
 
 
-def _registry_key(rule_id: str, version: str, jurisdiction: str) -> str:
-    return f"{rule_id}@{version}@{jurisdiction}"
+def _registry_key(rule_id: str, version: str, jurisdiction: str, tax_year: str) -> str:
+    return f"{rule_id}@{version}@{jurisdiction}@{tax_year}"
 
 
 def _semver_key(version: str) -> tuple[int, ...]:
@@ -44,7 +44,7 @@ def load_all_rules() -> None:
         if data is None:
             continue
         entry = RuleEntry.model_validate(data)
-        key = _registry_key(entry.rule_id, entry.version, entry.jurisdiction)
+        key = _registry_key(entry.rule_id, entry.version, entry.jurisdiction, entry.tax_year)
         _registry[key] = entry
     _loaded = True
 

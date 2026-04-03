@@ -7,8 +7,8 @@ description: >
   Applies the 2026-27 Scottish income tax bands to non-savings, non-dividend income.
   Scotland operates six rates set by the Scottish Parliament: starter (19%), basic (20%),
   intermediate (21%), higher (42%), advanced (45%) and top (48%). The nil-rate band
-  (0–£12,570) reflects the UK-wide personal allowance. Input variable `taxable_income`
-  is income after deduction of the personal allowance.
+  (0–£12,570) reflects the UK-wide personal allowance, so input variable `taxable_income`
+  should be the gross amount before deduction of the personal allowance.
 dsl_source: |
   bands taxable_income:
     0      to 12570  at 0%

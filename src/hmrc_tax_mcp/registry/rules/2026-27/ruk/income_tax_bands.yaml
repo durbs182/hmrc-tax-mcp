@@ -4,11 +4,11 @@ tax_year: "2026-27"
 jurisdiction: rUK
 title: Income Tax Bands (rUK 2026-27)
 description: >
-  Applies the 2026-27 rUK income tax bands to post-personal-allowance taxable income.
-  Input variable `taxable_income` must be income AFTER deduction of the personal
-  allowance (i.e. apply pa_taper first). The nil-rate (0–£12,570) band has been
-  removed to eliminate ambiguity: if income is below the PA the caller should pass
-  zero or handle it before invoking this rule.
+  Applies the 2026-27 rUK income tax bands using the statutory income thresholds,
+  including the personal allowance boundary at £12,570. Input variable
+  `taxable_income` must therefore be the relevant income amount BEFORE any
+  personal allowance deduction or taper adjustment is applied. Income below
+  £12,570 falls outside all rated bands and attracts zero tax.
 dsl_source: |
   bands taxable_income:
     12570  to 50270  at 20%
