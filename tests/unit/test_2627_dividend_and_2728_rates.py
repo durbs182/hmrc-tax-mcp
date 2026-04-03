@@ -50,14 +50,14 @@ class TestDividendIncomeBands2627:
         assert result == Decimal("0.00")
 
     def test_straddles_basic_higher_boundary(self) -> None:
-        """Dividends crossing from basic to upper rate band."""
-        # income_before=49270, dividend=5000, DA=500, taxable=4500
-        # start=49270, end=53770
-        # basic_portion = min(53770,50270)-max(49270,12570) = 50270-49270 = 1000
-        # upper_portion = min(53770,125140)-max(49270,50270) = 53770-50270 = 3500
-        # tax = 1000*0.1075 + 3500*0.3575 = 107.50 + 1251.25 = 1358.75
+        """Dividends crossing from basic to upper rate band; DA consumes band space."""
+        # income_before=49270, dividend=5000
+        # div_allowance=500 (0% slice, consumes band space); start=49770; end=54270
+        # basic_portion = min(54270,50270)-max(49770,12570) = 50270-49770 = 500 @ 10.75%
+        # upper_portion = min(54270,125140)-max(49770,50270) = 54270-50270 = 4000 @ 35.75%
+        # tax = 500*0.1075 + 4000*0.3575 = 53.75 + 1430.00 = 1483.75
         result = self._eval(5000, 49270)
-        assert result == Decimal("1358.75")
+        assert result == Decimal("1483.75")
 
     def test_zero_dividends(self) -> None:
         result = self._eval(0, 40000)
@@ -117,14 +117,14 @@ class TestSavingsIncomeBands2728:
         assert result == Decimal("0.00")
 
     def test_straddles_basic_higher_boundary(self) -> None:
-        """Savings crossing from basic to higher band."""
-        # income_before=49000, savings=3000; PSA: 49000<50270 → basic → PSA=1000
-        # savings_taxable=2000; start=49000, end=51000
-        # basic_portion=min(51000,50270)-max(49000,12570)=50270-49000=1270 @ 22%
-        # higher_portion=min(51000,125140)-max(49000,50270)=51000-50270=730 @ 42%
-        # tax=1270*0.22 + 730*0.42 = 279.40+306.60 = 586.00
+        """Savings crossing from basic to higher band; PSA tier from total income."""
+        # income_before=49000, savings=3000; total_income=52000 > 50270 → PSA=500
+        # psa_band=500 (0% slice, consumes band space); start=49500; end=52000
+        # basic_portion=min(52000,50270)-max(49500,12570)=50270-49500=770 @ 22%
+        # higher_portion=min(52000,125140)-max(49500,50270)=52000-50270=1730 @ 42%
+        # tax=770*0.22 + 1730*0.42 = 169.40 + 726.60 = 896.00
         result = self._eval(3000, 49000)
-        assert result == Decimal("586.00")
+        assert result == Decimal("896.00")
 
     def test_scotland_same_rates(self) -> None:
         """Savings income rates apply UK-wide including Scotland."""
