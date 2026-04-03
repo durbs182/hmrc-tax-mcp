@@ -55,7 +55,7 @@ _SYSTEM_PROMPT = textwrap.dedent("""\
       "description": "<one sentence>",
       "tax_year": "2025-26",
       "jurisdiction": "rUK",
-      "citations": [{"title": "...", "url": "...", "section": "..."}]
+      "citations": [{"label": "...", "url": "..."}]
     }
 """)
 
@@ -96,12 +96,8 @@ class ExtractionResult:
             "dsl_source": self.dsl_source,
             "reviewed_by": self.reviewed_by,
             "review_notes": self.review_notes,
-            "citations": self.citations,
-            "provenance": {
-                "source": "nl_extractor",
-                "model": "claude-3-5-haiku-20241022",
-                "status": "DRAFT — awaiting human review",
-            },
+            "citations": _normalise_citations(self.citations),
+            "provenance": "nl_extracted",
         }
 
 
@@ -197,7 +193,22 @@ def _parse_response(raw: str) -> ExtractionResult:
         description=meta.get("description", ""),
         tax_year=meta.get("tax_year", ""),
         jurisdiction=meta.get("jurisdiction", ""),
-        citations=meta.get("citations", []),
+        citations=_normalise_citations(meta.get("citations", [])),
         raw_response=raw,
         warnings=warnings,
     )
+
+
+def _normalise_citations(citations: Any) -> list[dict[str, Any]]:
+    """Normalise LLM citation shapes to the registry contract: label + url."""
+    normalised: list[dict[str, Any]] = []
+    if not isinstance(citations, list):
+        return normalised
+    for item in citations:
+        if not isinstance(item, dict):
+            continue
+        label = item.get("label") or item.get("title")
+        url = item.get("url")
+        if label and url:
+            normalised.append({"label": str(label), "url": str(url)})
+    return normalised

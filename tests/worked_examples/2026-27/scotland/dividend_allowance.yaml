@@ -1,0 +1,5 @@
+examples:
+- description: "Dividend allowance remains \xA3500 for Scottish taxpayers as well"
+  source: HMRC https://www.gov.uk/tax-on-dividends
+  inputs: {}
+  expected: 500

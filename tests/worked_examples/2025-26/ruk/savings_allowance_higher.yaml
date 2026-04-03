@@ -1,0 +1,5 @@
+examples:
+- description: "Higher-rate personal savings allowance is \xA3500"
+  source: HMRC https://www.gov.uk/apply-tax-free-interest-on-savings
+  inputs: {}
+  expected: 500

@@ -1,0 +1,15 @@
+examples:
+- description: "HMRC technical note annex: \xA3200 dividends remain within the \xA3\
+    500 dividend allowance"
+  source: HMRC technical note annex https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income/change-to-tax-rates-for-property-savings-and-dividend-income-technical-note
+  inputs:
+    dividend_income: 200
+    income_before: 33400
+  expected: 0.0
+- description: Dividend income above the allowance within the ordinary rate band
+  source: arithmetic from HMRC dividend rates and allowance in HMRC technical note
+    annex https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income/change-to-tax-rates-for-property-savings-and-dividend-income-technical-note
+  inputs:
+    dividend_income: 2000
+    income_before: 30000
+  expected: 161.25

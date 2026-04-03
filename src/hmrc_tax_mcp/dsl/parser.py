@@ -358,6 +358,8 @@ class Parser:
                     denom = (
                         float(denom_tok.value) if "." in denom_tok.value else int(denom_tok.value)
                     )
+                    if denom == 0:
+                        raise ParseError("taper ratio denominator must be non-zero")
                     ratio = {"node": "CONST", "value": num / denom}
                 else:
                     ratio = {"node": "CONST", "value": num}

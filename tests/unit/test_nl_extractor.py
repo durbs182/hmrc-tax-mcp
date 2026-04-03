@@ -29,7 +29,7 @@ _VALID_JSON_BLOCK = json.dumps({
     "description": "A simple constant rule.",
     "tax_year": "2025-26",
     "jurisdiction": "rUK",
-    "citations": [{"title": "HMRC Test", "url": "https://hmrc.gov.uk/test", "section": "s1"}],
+    "citations": [{"label": "HMRC Test", "url": "https://hmrc.gov.uk/test"}],
 })
 
 _VALID_RESPONSE = f"{_VALID_DSL}\n<<<JSON\n{_VALID_JSON_BLOCK}\nJSON>>>"
@@ -143,7 +143,16 @@ class TestExtractionResult:
 
     def test_to_registry_dict_provenance_status(self) -> None:
         d = self._make().to_registry_dict()
-        assert "DRAFT" in d["provenance"]["status"]
+        assert d["provenance"] == "nl_extracted"
+
+    def test_title_citation_is_normalised_to_label(self) -> None:
+        response = (
+            f"{_VALID_DSL}\n<<<JSON\n"
+            f"{json.dumps({'rule_id': 'test', 'title': 'T', 'description': 'D', 'tax_year': '2025-26', 'jurisdiction': 'rUK', 'citations': [{'title': 'HMRC Manual', 'url': 'https://example.com'}]})}\n"
+            "JSON>>>"
+        )
+        result = _parse_response(response)
+        assert result.citations == [{"label": "HMRC Manual", "url": "https://example.com"}]
 
 
 # ---------------------------------------------------------------------------

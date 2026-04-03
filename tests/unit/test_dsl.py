@@ -7,8 +7,7 @@ from decimal import Decimal
 import pytest
 
 from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl
-from hmrc_tax_mcp.dsl.parser import ParseError
-from hmrc_tax_mcp.evaluator import Evaluator
+from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
 
 
 def compile_and_eval(dsl: str, vars: dict | None = None) -> Decimal | bool:
@@ -87,6 +86,18 @@ class TestLogical:
     def test_not(self) -> None:
         result = compile_and_eval("return not (income > 100000)", {"income": 50000})
         assert result is True
+
+    def test_if_condition_must_be_boolean(self) -> None:
+        with pytest.raises(EvaluationError, match="IF condition must evaluate to bool"):
+            compile_and_eval("return if 2 then 10 else 20")
+
+    def test_and_argument_must_be_boolean(self) -> None:
+        with pytest.raises(EvaluationError, match="AND argument 0 must evaluate to bool"):
+            compile_and_eval("return 2 and true")
+
+    def test_not_argument_must_be_boolean(self) -> None:
+        with pytest.raises(EvaluationError, match="NOT argument must evaluate to bool"):
+            compile_and_eval("return not 3")
 
 
 class TestFunctionCall:
@@ -182,8 +193,18 @@ class TestParseErrors:
             compile_dsl("let x = 1")
 
     def test_empty_bands_raises(self) -> None:
-        with pytest.raises(ParseError):
+        with pytest.raises(CompileError, match="Expected NEWLINE, got EOF"):
             compile_dsl("bands income:\n")
+
+    def test_taper_zero_denominator_raises_compile_error(self) -> None:
+        dsl = """\
+taper adjusted_net_income:
+  threshold 100000
+  ratio 1 per 0
+  base 12570
+"""
+        with pytest.raises(CompileError, match="denominator must be non-zero"):
+            compile_dsl(dsl)
 
 
 class TestRoundtrip:

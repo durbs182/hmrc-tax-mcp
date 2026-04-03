@@ -59,6 +59,13 @@ class TestStageSyntax:
         results = validate_rule(rule)
         assert not results[0].passed
 
+    def test_parse_error_is_reported_not_raised(self) -> None:
+        rule = _rule_dict("income_tax_bands")
+        rule["dsl_source"] = "return if income > 1 then 2"
+        results = validate_rule(rule)
+        assert not results[0].passed
+        assert "else" in results[0].message
+
     def test_later_stages_skipped_on_syntax_failure(self) -> None:
         rule = _rule_dict("income_tax_bands")
         rule["dsl_source"] = "not valid dsl @@"
@@ -201,6 +208,10 @@ class TestStageWorkedExamples:
         assert len(examples) == 6
         results = _run("income_tax_bands", examples=examples)
         assert results[4].passed, results[4].details
+
+    def test_auto_loads_worked_examples_for_registry_rule(self) -> None:
+        results = validate_rule(_rule_dict("income_tax_due"))
+        assert results[4].passed, results[4].message
 
     def test_pa_taper_all_worked_examples(self) -> None:
         examples = load_worked_examples(WORKED_EXAMPLES_DIR / "pa_taper.yaml")
@@ -347,6 +358,14 @@ class TestRoundingPolicyEnforcement:
         }
         results = validate_rule(rule)
         assert results[1].passed, results[1].message
+
+
+class TestWorkedExampleRequirement:
+    def test_monetary_rule_without_examples_fails_stage5(self) -> None:
+        rule = _rule_dict("income_tax_due")
+        results = validate_rule(rule, worked_examples=[])
+        assert not results[4].passed
+        assert "worked examples are required" in results[4].message.lower()
 
     def test_monetary_let_with_round_body_passes(self) -> None:
         """LET whose body is round() should pass — LET body is the final value."""

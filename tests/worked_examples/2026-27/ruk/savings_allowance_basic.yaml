@@ -1,0 +1,5 @@
+examples:
+- description: "Basic-rate personal savings allowance is \xA31,000"
+  source: HMRC https://www.gov.uk/apply-tax-free-interest-on-savings
+  inputs: {}
+  expected: 1000

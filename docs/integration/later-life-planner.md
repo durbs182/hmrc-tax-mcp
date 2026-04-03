@@ -491,14 +491,13 @@ Remaining personal allowance: **£7,570** (tapered from £12,570)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| rUK 2025-26 rules | ✅ | 11 rules live |
-| Scotland 2025-26 rules | ✅ | 6 rules live |
-| rUK 2026-27 rules | ⏳ | After HMRC Budget confirmation |
+| Multi-year rUK rules | ✅ | Published registry spans `2025-26` through `2030-31` |
+| Scotland rules | ✅ | Published Scottish rule set live; composite `income_tax_due` still outstanding |
 | Wales devolved rates | ⏳ | Wales uses rUK rates for 2025-26 |
 | NI income tax | ⏳ | NI uses rUK rates; no devolved income tax |
-| MPAA rules | ⏳ | Money Purchase Annual Allowance |
+| MPAA rules | ✅ | Money Purchase Annual Allowance rules published |
 | Protected pension age | ⏳ | Pre-2006 protected pension age 50 |
-| Tapered annual allowance | ⏳ | High earner pension AA taper |
+| Tapered annual allowance | ✅ | High earner pension AA taper rules published |
 | Savings starter rate band | ⏳ | 0% on first £5,000 savings for low earners |
 
 ---

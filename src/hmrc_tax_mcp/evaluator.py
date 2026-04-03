@@ -100,7 +100,7 @@ class Evaluator:
             return result
 
         if t == "IF":
-            cond = self.eval(node["cond"], depth + 1)
+            cond = self._require_bool(self.eval(node["cond"], depth + 1), "IF condition")
             branch = node["then"] if cond else node["else"]
             result = self.eval(branch, depth + 1)
             self._record(t, {"cond": cond}, result)
@@ -166,18 +166,28 @@ class Evaluator:
         # Logical
         # ------------------------------------------------------------------
         if t == "AND":
-            bool_result = all(bool(self.eval(a, depth + 1)) for a in node["args"])
+            bool_result = True
+            for i, arg in enumerate(node["args"]):
+                value = self._require_bool(self.eval(arg, depth + 1), f"AND argument {i}")
+                if not value:
+                    bool_result = False
+                    break
             self._record(t, {}, bool_result)
             return bool_result
 
         if t == "OR":
-            bool_result = any(bool(self.eval(a, depth + 1)) for a in node["args"])
+            bool_result = False
+            for i, arg in enumerate(node["args"]):
+                value = self._require_bool(self.eval(arg, depth + 1), f"OR argument {i}")
+                if value:
+                    bool_result = True
+                    break
             self._record(t, {}, bool_result)
             return bool_result
 
         if t == "NOT":
-            val = self.eval(node["args"][0], depth + 1)
-            bool_result = not bool(val)
+            val = self._require_bool(self.eval(node["args"][0], depth + 1), "NOT argument")
+            bool_result = not val
             self._record(t, {"val": val}, bool_result)
             return bool_result
 
@@ -299,6 +309,14 @@ class Evaluator:
                 )
             result.append(a)
         return result
+
+    def _require_bool(self, value: Any, context: str) -> bool:
+        """Validate that a value is a boolean, not a truthy numeric proxy."""
+        if not isinstance(value, bool):
+            raise EvaluationError(
+                f"{context} must evaluate to bool, got {type(value).__name__!r}"
+            )
+        return value
 
     def _record(self, node: str, inputs: dict[str, Any], output: Any) -> None:
         if self.trace:

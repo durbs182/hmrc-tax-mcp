@@ -1,0 +1,5 @@
+examples:
+- description: "Additional-rate personal savings allowance is \xA30"
+  source: HMRC https://www.gov.uk/apply-tax-free-interest-on-savings
+  inputs: {}
+  expected: 0

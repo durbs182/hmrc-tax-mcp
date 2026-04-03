@@ -28,7 +28,7 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain tax strategies
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                # 254 tests
+pytest                # 405 tests
 hmrc-tax-mcp          # starts MCP server on stdio (requires Python ≥3.10 + pip install -e ".[server]")
 ```
 
@@ -58,10 +58,11 @@ blocked until a human engineer:
 
 ## Tax Years Covered
 
-| Year | Jurisdiction | Rules |
-|------|-------------|-------|
-| 2025–26 | rUK | 11 rules: income tax bands, PA taper, CGT, UFPLS fractions, pension LSA, state pension, savings allowances, dividend allowance |
-| 2025–26 | Scotland | ✅ 6 rules (income_tax_bands + 5 shared rules)* |
+| Coverage | Status |
+|----------|--------|
+| Published registry | Multiple tax years from `2025-26` through `2030-31` |
+| Jurisdictions | `rUK` and `scotland` |
+| Worked examples | Full coverage for all published registry rules (`86/86` example files present) |
 
 ## DSL Quick Reference
 
@@ -101,14 +102,15 @@ Every rule passes 6 stages before publication:
 
 | Phase | Deliverable | Status |
 |-------|------------|--------|
-| 1 | Repo scaffold, AST schema, Evaluator | ✅ done |
-| 2 | DSL tokenizer → parser → compiler | ✅ done |
-| 3 | 2025–26 rUK rule set (11 rules) | ✅ done |
-| 4 | 6-stage validation pipeline | ✅ done |
-| 5 | MCP server remaining tools (explain_rule, trace_execution) | ✅ done |
-| 6 | NL extractor (LLM-assisted, human-reviewed) | ✅ |
-| 7 | Scottish income tax jurisdiction | ✅ |
-| 8 | Integration guide for later-life-planner | ✅ |
+| 1 | Repo scaffold, AST schema, evaluator | ✅ |
+| 2 | DSL tokenizer → parser → compiler | ✅ |
+| 3 | Rule registry across multiple years / jurisdictions | ✅ |
+| 4 | 6-stage validation pipeline with auto-loaded worked examples | ✅ |
+| 5 | MCP server tools (`explain_rule`, `trace_execution`, validation, execution) | ✅ |
+| 6 | NL extractor with human-review gate | ✅ |
+| 7 | Scottish income tax jurisdiction support | ✅ |
+| 8 | Integration guide for `later-life-planner` | ✅ |
+| 9 | Post-review hardening and full worked-example coverage | ✅ |
 
 ## Design Principles
 

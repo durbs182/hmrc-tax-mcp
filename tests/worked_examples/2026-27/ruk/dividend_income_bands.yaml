@@ -1,0 +1,22 @@
+examples:
+- description: "HMRC allowance example pattern: \xA3200 dividends remain within the\
+    \ \xA3500 dividend allowance"
+  source: HMRC https://www.gov.uk/tax-on-dividends
+  inputs:
+    dividend_income: 200
+    income_before: 33400
+  expected: 0.0
+- description: "Basic-rate dividend tax after the \xA3500 allowance"
+  source: arithmetic from HMRC 2026-27 dividend rates and allowance (HMRC https://www.gov.uk/tax-on-dividends;
+    HMRC https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past)
+  inputs:
+    dividend_income: 2000
+    income_before: 30000
+  expected: 161.25
+- description: Dividend income spanning ordinary and upper-rate bands
+  source: arithmetic from HMRC 2026-27 dividend rates and frozen thresholds (HMRC
+    https://www.gov.uk/tax-on-dividends; HMRC https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past)
+  inputs:
+    dividend_income: 30000
+    income_before: 40000
+  expected: 8103.75

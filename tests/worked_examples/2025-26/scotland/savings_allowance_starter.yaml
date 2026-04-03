@@ -1,0 +1,6 @@
+examples:
+- description: "Scottish starter-rate taxpayers receive a \xA31,000 personal savings\
+    \ allowance"
+  source: HMRC https://www.gov.uk/apply-tax-free-interest-on-savings
+  inputs: {}
+  expected: 1000

@@ -1,0 +1,15 @@
+examples:
+- description: "HMRC technical note annex: \xA33,000 property income after \xA330,000\
+    \ employment -> \xA3660 tax"
+  source: HMRC technical note annex https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income/change-to-tax-rates-for-property-savings-and-dividend-income-technical-note
+  inputs:
+    property_income: 3000
+    income_before: 30000
+  expected: 660.0
+- description: Property income straddling the basic and higher property bands
+  source: arithmetic from HMRC property-income rates in HMRC technical note annex
+    https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income/change-to-tax-rates-for-property-savings-and-dividend-income-technical-note
+  inputs:
+    property_income: 25000
+    income_before: 40000
+  expected: 8446.0

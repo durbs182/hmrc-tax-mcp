@@ -1,0 +1,15 @@
+examples:
+- description: No embedded gain when market value does not exceed base cost
+  source: HMRC https://www.gov.uk/capital-gains-tax/selling-investments
+  inputs:
+    market_value: 10000
+    base_cost: 10000
+    amount_drawn: 4000
+  expected: 0.0
+- description: Part disposal crystallises the embedded gain proportionally
+  source: arithmetic from proportional disposal method documented in HMRC https://www.gov.uk/capital-gains-tax/selling-investments
+  inputs:
+    market_value: 10000
+    base_cost: 6000
+    amount_drawn: 4000
+  expected: 1600.0

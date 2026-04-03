@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
@@ -18,19 +19,31 @@ try:
     from mcp.types import TextContent, Tool
     _MCP_AVAILABLE = True
 except ImportError:
+    Server = None  # type: ignore[assignment]
+    stdio_server = None  # type: ignore[assignment]
     _MCP_AVAILABLE = False
+
+    @dataclass
+    class TextContent:  # type: ignore[no-redef]
+        type: str
+        text: str
+
+    @dataclass
+    class Tool:  # type: ignore[no-redef]
+        name: str
+        description: str
+        inputSchema: dict[str, Any]
 
 from hmrc_tax_mcp.ast.canonical import ast_checksum
 from hmrc_tax_mcp.dsl.compiler import CompileError
 from hmrc_tax_mcp.dsl.compiler import compile_dsl as _compile_dsl
-from hmrc_tax_mcp.dsl.tokenizer import TokenizeError
 from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
 from hmrc_tax_mcp.explainer import explain_rule as _explain_rule
 from hmrc_tax_mcp.extractor.nl_extractor import NLExtractor
 from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
 from hmrc_tax_mcp.validation.pipeline import validate_rule as _validate_rule
 
-app = Server("hmrc-tax-mcp") if _MCP_AVAILABLE else None
+app = Server("hmrc-tax-mcp") if _MCP_AVAILABLE and Server is not None else None
 
 
 def _json(data: Any) -> str:
@@ -42,7 +55,6 @@ def _json(data: Any) -> str:
     return json.dumps(data, default=_default, indent=2)
 
 
-@app.list_tools()  # type: ignore[union-attr, untyped-decorator]
 async def handle_list_tools() -> list[Tool]:
     return [
         Tool(
@@ -255,7 +267,6 @@ async def handle_list_tools() -> list[Tool]:
     ]
 
 
-@app.call_tool()  # type: ignore[union-attr, untyped-decorator]
 async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     if name == "list_rules":
         rules = list_rules()
@@ -334,7 +345,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             ast_node = _compile_dsl(dsl_src)
             checksum = ast_checksum(ast_node)
             return [TextContent(type="text", text=_json({"ast": ast_node, "checksum": checksum}))]
-        except (CompileError, TokenizeError) as exc:
+        except CompileError as exc:
             return [TextContent(type="text", text=_json({"error": str(exc)}))]
 
     if name == "validate_rule":
@@ -438,7 +449,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         try:
             draft_ast = _compile_dsl(result.dsl_source)
             draft_checksum = ast_checksum(draft_ast)
-        except (CompileError, TokenizeError) as exc:
+        except CompileError as exc:
             compile_error = str(exc)
 
         data = {  # type: ignore[assignment]
@@ -460,10 +471,20 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
     return [TextContent(type="text", text=_json({"error": f"Unknown tool: {name!r}"}))]
 
 
+if _MCP_AVAILABLE and app is not None:
+    handle_list_tools = app.list_tools()(handle_list_tools)
+    handle_call_tool = app.call_tool()(handle_call_tool)
+
+
 async def _run() -> None:
+    if stdio_server is None or app is None:
+        raise RuntimeError(
+            "MCP server requires Python >=3.10. "
+            "Install with: pip install 'hmrc-tax-mcp[server]'"
+        )
     async with stdio_server() as (read_stream, write_stream):
-        await app.run(  # type: ignore[union-attr]
-            read_stream, write_stream, app.create_initialization_options()  # type: ignore[union-attr]
+        await app.run(
+            read_stream, write_stream, app.create_initialization_options()
         )
 
 

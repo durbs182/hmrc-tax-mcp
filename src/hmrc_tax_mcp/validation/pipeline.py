@@ -26,7 +26,6 @@ import yaml
 
 from hmrc_tax_mcp.ast.canonical import ast_checksum as _compute_ast_checksum
 from hmrc_tax_mcp.dsl.compiler import CompileError, compile_dsl
-from hmrc_tax_mcp.dsl.tokenizer import TokenizeError
 from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
 
 # ---------------------------------------------------------------------------
@@ -123,6 +122,7 @@ class WorkedExample:
     inputs: dict[str, Any]
     expected: Any  # numeric or bool — compared with Decimal precision
     tolerance: str = "0"  # absolute Decimal tolerance (default: exact)
+    source: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -140,6 +140,26 @@ def _to_decimal(value: Any) -> Decimal:
     return Decimal(str(value))
 
 
+def _repo_root() -> Path:
+    """Return the repository root when running from a source checkout."""
+    return Path(__file__).resolve().parents[3]
+
+
+def _default_worked_examples_path(rule: dict[str, Any]) -> Path | None:
+    tax_year = rule.get("tax_year")
+    jurisdiction = str(rule.get("jurisdiction", "")).lower()
+    rule_id = rule.get("rule_id")
+    if not tax_year or not jurisdiction or not rule_id:
+        return None
+    path = _repo_root() / "tests" / "worked_examples" / str(tax_year) / jurisdiction / f"{rule_id}.yaml"
+    return path if path.exists() else None
+
+
+def _worked_examples_required(rule: dict[str, Any]) -> bool:
+    """High-impact rules must carry worked examples before they can pass stage 5."""
+    return bool(rule.get("monetary_output") or rule.get("reviewed_by"))
+
+
 # ---------------------------------------------------------------------------
 # Stage implementations
 # ---------------------------------------------------------------------------
@@ -155,7 +175,7 @@ def _stage_syntax(rule: dict[str, Any]) -> ValidationResult:
         )
     try:
         compile_dsl(dsl_source)
-    except (CompileError, TokenizeError) as exc:
+    except CompileError as exc:
         return ValidationResult(
             stage=ValidationStage.SYNTAX,
             passed=False,
@@ -234,7 +254,7 @@ def _stage_canonicalisation(rule: dict[str, Any]) -> ValidationResult:
 
     try:
         recompiled_ast = compile_dsl(dsl_source)
-    except (CompileError, TokenizeError) as exc:
+    except CompileError as exc:
         return ValidationResult(
             stage=ValidationStage.CANONICALISATION,
             passed=False,
@@ -314,18 +334,39 @@ def _stage_execution(rule: dict[str, Any]) -> ValidationResult:
 
 
 def _zero_variables(ast: dict[str, Any]) -> dict[str, Any]:
-    """Walk the AST and collect all VAR names; return them mapped to 0."""
+    """Walk the AST and collect all VAR names with safe smoke-test defaults."""
     variables: dict[str, Any] = {}
 
-    def _walk(node: Any) -> None:
+    def _remember(name: str, value: Any) -> None:
+        if name not in variables:
+            variables[name] = value
+
+    def _walk(node: Any, bool_context: bool = False) -> None:
         if isinstance(node, dict):
-            if node.get("node") == "VAR":
-                variables[node["name"]] = Decimal(0)
+            node_type = node.get("node")
+            if node_type == "VAR":
+                _remember(node["name"], False if bool_context else Decimal(0))
+                return
+            if node_type == "IF":
+                _walk(node.get("cond"), bool_context=True)
+                _walk(node.get("then"))
+                _walk(node.get("else") or node.get("else_"))
+                return
+            if node_type in {"AND", "OR", "NOT"}:
+                for item in node.get("args", []):
+                    _walk(item, bool_context=True)
+                return
+            if node_type == "LET":
+                for item in node.get("bindings", []):
+                    if isinstance(item, (list, tuple)) and len(item) == 2:
+                        _walk(item[1])
+                _walk(node.get("body"))
+                return
             for v in node.values():
                 _walk(v)
         elif isinstance(node, list):
             for item in node:
-                _walk(item)
+                _walk(item, bool_context=bool_context)
 
     _walk(ast)
     return variables
@@ -337,6 +378,15 @@ def _stage_worked_examples(
 ) -> ValidationResult:
     """Stage 5: Evaluate the AST against HMRC-published worked examples."""
     if not worked_examples:
+        if _worked_examples_required(rule):
+            return ValidationResult(
+                stage=ValidationStage.WORKED_EXAMPLES,
+                passed=False,
+                message=(
+                    "Worked examples are required for monetary or publication-ready rules; "
+                    "no worked examples were provided or discovered for this rule"
+                ),
+            )
         return ValidationResult(
             stage=ValidationStage.WORKED_EXAMPLES,
             passed=True,
@@ -361,6 +411,7 @@ def _stage_worked_examples(
             failures.append({
                 "description": ex.description,
                 "error": str(exc),
+                "source": ex.source,
             })
             continue
 
@@ -373,6 +424,7 @@ def _stage_worked_examples(
                     "description": ex.description,
                     "expected": expected,
                     "got": result,
+                    "source": ex.source,
                 })
         else:
             actual = _to_decimal(result)
@@ -382,6 +434,7 @@ def _stage_worked_examples(
                     "expected": str(expected),
                     "got": str(actual),
                     "tolerance": str(tolerance),
+                    "source": ex.source,
                 })
 
     if failures:
@@ -430,7 +483,8 @@ def validate_rule(
     Args:
         rule_dict: The rule as a plain dict (as loaded from YAML or the MCP tool).
         worked_examples: Optional list of WorkedExample instances for stage 5.
-            If omitted, stage 5 passes trivially.
+            If omitted, examples are auto-loaded from `tests/worked_examples/`
+            when the rule carries `tax_year`, `jurisdiction`, and `rule_id`.
 
     Returns:
         A list of six ValidationResult instances, one per stage, in order.
@@ -459,7 +513,11 @@ def validate_rule(
     if failed:
         results.append(_skip(ValidationStage.WORKED_EXAMPLES, "earlier stage failed"))
     else:
-        r5 = _stage_worked_examples(rule_dict, worked_examples or [])
+        examples = worked_examples
+        if examples is None:
+            examples_path = _default_worked_examples_path(rule_dict)
+            examples = load_worked_examples(examples_path) if examples_path else []
+        r5 = _stage_worked_examples(rule_dict, examples)
         results.append(r5)
         if not r5.passed:
             failed = True
@@ -494,5 +552,6 @@ def load_worked_examples(yaml_path: Path) -> list[WorkedExample]:
             inputs=item["inputs"],
             expected=item["expected"],
             tolerance=str(item.get("tolerance", "0")),
+            source=item.get("source"),
         ))
     return examples

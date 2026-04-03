@@ -102,25 +102,25 @@ class TestComparisons:
 class TestLogical:
     def test_and_both_true(self) -> None:
         assert ev({"node": "AND", "args": [
-            {"node": "CONST", "value": 1},
-            {"node": "CONST", "value": 1},
+            {"node": "CONST", "value": True},
+            {"node": "CONST", "value": True},
         ]}) is True
 
     def test_or_one_false(self) -> None:
         assert ev({"node": "OR", "args": [
-            {"node": "CONST", "value": 0},
-            {"node": "CONST", "value": 1},
+            {"node": "CONST", "value": False},
+            {"node": "CONST", "value": True},
         ]}) is True
 
     def test_not(self) -> None:
-        assert ev({"node": "NOT", "args": [{"node": "CONST", "value": 0}]}) is True
+        assert ev({"node": "NOT", "args": [{"node": "CONST", "value": False}]}) is True
 
 
 class TestIf:
     def test_then_branch(self) -> None:
         result = ev({
             "node": "IF",
-            "cond": {"node": "CONST", "value": 1},
+            "cond": {"node": "CONST", "value": True},
             "then": {"node": "CONST", "value": 999},
             "else": {"node": "CONST", "value": 0},
         })
@@ -129,7 +129,7 @@ class TestIf:
     def test_else_branch(self) -> None:
         result = ev({
             "node": "IF",
-            "cond": {"node": "CONST", "value": 0},
+            "cond": {"node": "CONST", "value": False},
             "then": {"node": "CONST", "value": 999},
             "else": {"node": "CONST", "value": 42},
         })

@@ -105,11 +105,19 @@ def _explain_node(node: dict[str, Any], depth: int = 0) -> str:
         return f"if {cond} then {then}, otherwise {else_}"
 
     if t == "LET":
-        bindings = node.get("bindings", {})
+        bindings = node.get("bindings", [])
         body = _explain_node(node["body"], depth)
         if not bindings:
             return body
-        parts = [f"{k} = {_explain_node(v)}" for k, v in bindings.items()]
+        if isinstance(bindings, dict):
+            binding_items = list(bindings.items())
+        else:
+            binding_items = [
+                (item[0], item[1])
+                for item in bindings
+                if isinstance(item, (list, tuple)) and len(item) == 2
+            ]
+        parts = [f"{k} = {_explain_node(v)}" for k, v in binding_items]
         return f"where {', '.join(parts)}: {body}"
 
     if t == "BAND_APPLY":
@@ -184,20 +192,39 @@ def explain_rule(rule_dict: dict[str, Any]) -> dict[str, Any]:
 
 
 def _collect_variables(node: Any) -> set[str]:
-    """Walk the AST and collect all VAR node names."""
+    """Walk the AST and collect free (externally required) VAR node names."""
     variables: set[str] = set()
 
-    def _walk(n: Any) -> None:
+    def _walk(n: Any, bound: set[str]) -> None:
         if not isinstance(n, dict):
             return
-        if n.get("node") == "VAR":
-            variables.add(n["name"])
+
+        node_type = n.get("node")
+        if node_type == "VAR":
+            name = n["name"]
+            if name not in bound:
+                variables.add(name)
+            return
+
+        if node_type == "LET":
+            let_bound = set(bound)
+            bindings = n.get("bindings", [])
+            for item in bindings:
+                if isinstance(item, (list, tuple)) and len(item) == 2:
+                    name, expr = item
+                    _walk(expr, let_bound)
+                    if isinstance(name, str):
+                        let_bound.add(name)
+            _walk(n.get("body"), let_bound)
+            return
+
         for v in n.values():
             if isinstance(v, dict):
-                _walk(v)
+                _walk(v, bound)
             elif isinstance(v, list):
                 for item in v:
-                    _walk(item)
+                    if isinstance(item, dict):
+                        _walk(item, bound)
 
-    _walk(node)
+    _walk(node, set())
     return variables

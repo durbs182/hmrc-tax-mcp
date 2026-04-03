@@ -1,0 +1,15 @@
+examples:
+- description: "HMRC technical note annex: \xA3400 savings income after \xA333,000\
+    \ earlier income -> \xA30 tax (PSA)"
+  source: HMRC technical note annex https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income/change-to-tax-rates-for-property-savings-and-dividend-income-technical-note
+  inputs:
+    savings_income: 400
+    income_before: 33000
+  expected: 0.0
+- description: Savings income above the PSA within the basic savings band
+  source: arithmetic from HMRC savings-income rates and PSA in HMRC technical note
+    annex https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income/change-to-tax-rates-for-property-savings-and-dividend-income-technical-note
+  inputs:
+    savings_income: 2000
+    income_before: 30000
+  expected: 220.0

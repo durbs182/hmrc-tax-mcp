@@ -21,7 +21,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from hmrc_tax_mcp.dsl.parser import parse
+from hmrc_tax_mcp.dsl.parser import ParseError, parse
+from hmrc_tax_mcp.dsl.tokenizer import TokenizeError
 
 
 class CompileError(Exception):
@@ -70,11 +71,12 @@ def compile_dsl(dsl_text: str) -> dict[str, Any]:
         Canonical AST dict ready for the Evaluator or registry storage.
 
     Raises:
-        CompileError: On semantic errors.
-        ParseError: On syntax errors.
-        TokenizeError: On tokenizer errors.
+        CompileError: On syntax, tokenizer, or semantic errors.
     """
-    stmts = parse(dsl_text.strip())
+    try:
+        stmts = parse(dsl_text.strip())
+    except (ParseError, TokenizeError) as exc:
+        raise CompileError(str(exc)) from exc
 
     if not stmts:
         raise CompileError("DSL source is empty")

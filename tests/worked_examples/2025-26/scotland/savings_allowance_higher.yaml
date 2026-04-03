@@ -1,0 +1,6 @@
+examples:
+- description: "Scottish higher/intermediate/advanced taxpayers receive a \xA3500\
+    \ personal savings allowance"
+  source: HMRC https://www.gov.uk/apply-tax-free-interest-on-savings
+  inputs: {}
+  expected: 500

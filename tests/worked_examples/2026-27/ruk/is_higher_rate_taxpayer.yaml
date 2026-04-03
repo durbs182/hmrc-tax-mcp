@@ -1,0 +1,11 @@
+examples:
+- description: "Income above the higher-rate threshold (\xA360,000) -> true"
+  source: HMRC https://www.gov.uk/income-tax-rates/personal-allowances
+  inputs:
+    adjusted_net_income: 60000
+  expected: true
+- description: "Income exactly at the higher-rate threshold (\xA350,270) -> false"
+  source: HMRC https://www.gov.uk/income-tax-rates/personal-allowances
+  inputs:
+    adjusted_net_income: 50270
+  expected: false

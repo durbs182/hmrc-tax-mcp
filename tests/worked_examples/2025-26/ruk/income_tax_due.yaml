@@ -1,0 +1,25 @@
+examples:
+- description: Zero income -> zero income tax
+  source: arithmetic from HMRC published thresholds and rates (HMRC https://www.gov.uk/income-tax-rates/personal-allowances;
+    HMRC https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past)
+  inputs:
+    adjusted_net_income: 0
+  expected: 0
+- description: "Basic-rate case \xA330,000 adjusted net income"
+  source: arithmetic from HMRC published thresholds and rates (HMRC https://www.gov.uk/income-tax-rates/personal-allowances;
+    HMRC https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past)
+  inputs:
+    adjusted_net_income: 30000
+  expected: 3486
+- description: "Higher-rate case \xA360,000 adjusted net income"
+  source: arithmetic from HMRC published thresholds and rates (HMRC https://www.gov.uk/income-tax-rates/personal-allowances;
+    HMRC https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past)
+  inputs:
+    adjusted_net_income: 60000
+  expected: 11432
+- description: "Tapered personal allowance case \xA3110,000 adjusted net income"
+  source: arithmetic from HMRC published thresholds and rates (HMRC https://www.gov.uk/income-tax-rates/personal-allowances;
+    HMRC https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past)
+  inputs:
+    adjusted_net_income: 110000
+  expected: 33432

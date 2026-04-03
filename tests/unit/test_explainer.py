@@ -6,8 +6,8 @@ from hmrc_tax_mcp.explainer import _collect_variables, explain_rule
 from hmrc_tax_mcp.registry.store import get_rule
 
 
-def _rule(rule_id: str, jurisdiction: str = "rUK") -> dict:
-    entry = get_rule(rule_id, jurisdiction=jurisdiction)
+def _rule(rule_id: str, jurisdiction: str = "rUK", tax_year: str | None = None) -> dict:
+    entry = get_rule(rule_id, jurisdiction=jurisdiction, tax_year=tax_year)
     assert entry is not None
     return entry.model_dump(mode="json")
 
@@ -96,6 +96,17 @@ class TestExplainIf:
     def test_cgt_rates_has_one_variable(self) -> None:
         result = explain_rule(_rule("cgt_rates"))
         assert result["variables"] == ["is_higher_rate_taxpayer"]
+
+
+class TestExplainLet:
+    def test_income_tax_due_explanation_handles_let_bindings(self) -> None:
+        result = explain_rule(_rule("income_tax_due", tax_year="2026-27"))
+        assert "where" in result["explanation"].lower()
+        assert "effective_pa" in result["explanation"]
+
+    def test_income_tax_due_variables_include_adjusted_net_income(self) -> None:
+        result = explain_rule(_rule("income_tax_due", tax_year="2026-27"))
+        assert "adjusted_net_income" in result["variables"]
 
 
 class TestCollectVariables:

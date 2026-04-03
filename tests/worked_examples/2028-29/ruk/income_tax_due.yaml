@@ -1,0 +1,18 @@
+examples:
+- description: "HMRC technical note annex: employment \xA330,000, property \xA33,000,\
+    \ savings \xA3400, dividends \xA3200 -> \xA34,146 tax before finance-cost relief"
+  source: HMRC technical note annex https://www.gov.uk/government/publications/changes-to-tax-rates-for-property-savings-and-dividend-income/change-to-tax-rates-for-property-savings-and-dividend-income-technical-note
+  inputs:
+    employment_income: 30000
+    property_income: 3000
+    savings_income: 400
+    dividend_income: 200
+  expected: 4146.0
+- description: Zero income across all streams -> zero tax
+  source: deterministic zero-input smoke case
+  inputs:
+    employment_income: 0
+    property_income: 0
+    savings_income: 0
+    dividend_income: 0
+  expected: 0.0

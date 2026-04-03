@@ -30,33 +30,33 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain UK tax strateg
 
 ---
 
-## Build Checklist
+## Implementation Status
 
 ### Phase 1 — Repo Scaffold & Core AST/Evaluator ✅
 - [x] `repo-scaffold` — GitHub repo, pyproject.toml, src layout, CI workflow
 - [x] `ast-schema` — AST node types (Pydantic), JSON schema, forward-ref rebuild
-- [x] `evaluator` — Decimal-precise evaluator, depth limit, trace, 52 unit tests
+- [x] `evaluator` — Decimal-precise evaluator, depth limit, trace, strict boolean control-flow semantics
 
 ### Phase 2 — DSL + Parser + Compiler ✅
 - [x] `dsl-tokenizer` — Regex tokenizer: IDENT, NUMBER, OP, KEYWORD, PUNCT, NEWLINE
 - [x] `dsl-parser` — Recursive-descent parser: let, return, if/then/else, bands, taper
-- [x] `dsl-compiler` — Parse tree → canonical AST; 50 unit tests
+- [x] `dsl-compiler` — Parse tree → canonical AST with deterministic compile-error normalisation
 
 ### Phase 3 — Rule Registry & 2025–26 rUK Rule Set ✅
 - [x] `rule-registry` — YAML store, lazy loading, get_rule(), list_rules(), get_rule_snapshot()
-- [x] `first-ruleset` — 11 rules: income_tax_bands, pa_taper, cgt_exempt, cgt_rates, pension_ufpls_tax_free_fraction, pension_ufpls_taxable_fraction, pension_lsa, state_pension_annual, savings_allowance_basic, savings_allowance_higher, dividend_allowance
+- [x] Published registry now spans multiple tax years, rUK and Scotland, with full worked-example coverage
 
 ### Phase 4 — Validation Pipeline ✅
 - [x] `validation-pipeline` — 6 stages: syntax → semantic → canonicalisation → execution → worked examples → human review gate
-- [x] Worked example YAML files for all 11 rUK 2025–26 rules
+- [x] Worked example YAML files for the full published registry (`86/86` rule/example files present)
 - [x] `validate_rule` MCP tool wired into server.py
-- [x] 30 pipeline unit tests; 143 total tests passing
+- [x] Validation now auto-loads worked examples by rule identity and enforces them for monetary/publication-ready rules
 
 ### Phase 5 — MCP Server (full) ✅
 - [x] `mcp-server` — `explain_rule` tool: AST walker → human-readable prose + variable list + citations
 - [x] `mcp-server` — `trace_execution` tool: full step-by-step audit trace with node-level inputs/outputs
 - [x] `explainer.py` — deterministic AST → prose; comma-formatted numbers; coverage for CONST, BAND_APPLY, TAPER, IF, arithmetic nodes
-- [x] 46 new tests (test_explainer.py + test_mcp_tools.py); **189 total tests passing**
+- [x] Server import path now degrades cleanly when optional MCP runtime dependencies are absent
 
 ### Phase 6 — NL Extractor ✅
 - [x] `nl-extractor` — `NLExtractor` class: HMRC prose → draft DSL via Anthropic Claude
@@ -64,14 +64,14 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain UK tax strateg
 - [x] `_parse_response()`: JSON delimiter (`<<<JSON / JSON>>>`), markdown fence stripping, fallback handling
 - [x] `extract_rule` MCP tool wired into server.py — returns draft, checksum, compile error, review gate
 - [x] All output permanently tagged `reviewed_by: null` — mandatory human review before publication
-- [x] 32 new tests (all mocked — no real API calls); **221 total tests passing**
+- [x] Extracted draft citations and provenance now normalise to the registry contract
 
 ### Phase 7 — Scottish Income Tax ✅
 - [x] `scotland-rules` — 6 Scotland YAML rules: income_tax_bands (6-band: starter/basic/intermediate/higher/advanced/top), pa_taper, savings_allowance_starter, savings_allowance_basic, savings_allowance_higher, dividend_allowance
 - [x] Registry key updated to `{rule_id}@{version}@{jurisdiction}` — supports same rule_id across jurisdictions
 - [x] `get_rule()` gains optional `jurisdiction` parameter for disambiguation
-- [x] Worked examples for Scotland income_tax_bands (7 cases) and pa_taper (5 cases)
-- [x] 33 new tests (`test_scotland_rules.py`); **254 total tests passing**
+- [x] Worked examples for Scotland income_tax_bands and pa_taper, plus coverage files for all currently published Scottish rules
+- [x] Scottish rule coverage now includes worked-example files for all currently published Scottish rules
 
 ### Phase 8 — Integration ✅
 - [x] `integration-docs` — `docs/integration/later-life-planner.md`: full integration guide
@@ -84,6 +84,13 @@ AI agents (Claude, Copilot, Codex) should orchestrate and explain UK tax strateg
   - `/api/mcp` proxy route with security allowlist (extract_rule blocked from browser)
   - Full projection call sequence worked example (Scottish £35k taxpayer)
   - Roadmap for future rules (2026-27, Wales, NI, MPAA, tapered AA)
+
+### Phase 9 — Post-Review Hardening ✅
+- [x] `dsl-errors` — syntax and parser failures normalised into deterministic `CompileError` responses
+- [x] `bool-semantics` — `IF` / `AND` / `OR` / `NOT` require explicit boolean operands; numeric truthiness rejected
+- [x] `let-explainer` — `LET` bindings explained in-order and excluded from free-variable reporting
+- [x] `worked-examples` — full registry coverage added, preferring HMRC/GOV.UK worked examples where available and clearly marking arithmetic derivations otherwise
+- [x] `test-suite` — public-surface regression tests added; **405 total tests passing**
 
 ---
 
@@ -126,12 +133,12 @@ percent(50000, 20)
 | `tax.get_rule_snapshot` | ✅ live | Full rule set for tax year + jurisdiction |
 | `compile_dsl` | ✅ live | DSL text → AST + SHA-256 checksum |
 | `validate_rule` | ✅ live | Full 6-stage validation pipeline |
-| `explain_rule` | ⏳ Phase 5 | Human-readable rule explanation |
-| `trace_execution` | ⏳ Phase 5 | Full execution trace for audit |
+| `explain_rule` | ✅ live | Human-readable rule explanation |
+| `trace_execution` | ✅ live | Full execution trace for audit |
 
 ---
 
-## 2025–26 rUK Rule Set ✅
+## Foundational 2025–26 rUK Rule Set ✅
 
 | Rule ID | Description | HMRC Source |
 |---------|-------------|-------------|

@@ -226,6 +226,11 @@ class TestExplainRuleTool:
         assert result["variables"] == []
         assert "268,275" in result["explanation"]
 
+    def test_composite_let_rule_explains_without_crashing(self) -> None:
+        result = tool_explain_rule("income_tax_due", jurisdiction="rUK")
+        assert "explanation" in result
+        assert "where" in result["explanation"].lower()
+
 
 # ---------------------------------------------------------------------------
 # trace_execution
