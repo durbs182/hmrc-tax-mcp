@@ -60,8 +60,9 @@ def get_rule(
 
     When multiple jurisdictions publish the same rule_id (e.g. ``income_tax_bands``
     exists for both ``rUK`` and ``scotland``), pass ``jurisdiction`` to disambiguate.
-    Omitting ``jurisdiction`` when multiple jurisdictions match raises ValueError
-    to prevent accidentally returning the wrong jurisdiction's rule.
+    If ``jurisdiction`` is omitted and multiple jurisdictions match, the lookup
+    defaults to the ``rUK`` entry when one is available; callers that need a
+    different jurisdiction should pass it explicitly.
 
     When multiple tax years publish the same rule_id/version/jurisdiction,
     pass ``tax_year`` to select a specific year. For ``version='latest'``, ties
