@@ -230,18 +230,20 @@ class Evaluator:
         # Domain-specific: TAPER
         # ------------------------------------------------------------------
         if t == "TAPER":
-            value = self.eval(node["args"][0], depth + 1)
+            taper_value = self.eval(node["args"][0], depth + 1)
             threshold = self.eval(node["threshold"], depth + 1)
             ratio = self.eval(node["ratio"], depth + 1)
             base = self.eval(node["base"], depth + 1)
-            if not isinstance(value, Decimal) or not isinstance(threshold, Decimal):
+            if not isinstance(taper_value, Decimal) or not isinstance(threshold, Decimal):
                 raise EvaluationError("TAPER: args must evaluate to numbers")
-            if value <= threshold:
+            if not isinstance(ratio, Decimal) or not isinstance(base, Decimal):
+                raise EvaluationError("TAPER: threshold, ratio, and base must be numbers")
+            if taper_value <= threshold:
                 result = base
             else:
-                excess = value - threshold
+                excess = taper_value - threshold
                 result = max(base - excess * ratio, Decimal("0"))
-            self._record(t, {"value": value, "threshold": threshold}, result)
+            self._record(t, {"value": taper_value, "threshold": threshold}, result)
             return result
 
         # ------------------------------------------------------------------
@@ -270,25 +272,25 @@ class Evaluator:
                 # UK self-assessment typically rounds income tax to the nearest penny.
                 if len(args) != 2:
                     raise EvaluationError("round(): requires exactly 2 arguments (value, places)")
-                value, places = args[0], args[1]
-                if isinstance(value, bool) or not isinstance(value, Decimal):
+                round_value, round_places = args[0], args[1]
+                if isinstance(round_value, bool) or not isinstance(round_value, Decimal):
                     raise EvaluationError("round(): first argument must be a number")
-                if isinstance(places, bool) or not isinstance(places, Decimal):
+                if isinstance(round_places, bool) or not isinstance(round_places, Decimal):
                     raise EvaluationError(
                         "round(): second argument (decimal places) must be a number"
                     )
-                if places != places.to_integral_value():
+                if round_places != round_places.to_integral_value():
                     raise EvaluationError(
                         "round(): decimal places must be an integer-valued number"
                     )
-                places_int = int(places)
+                places_int = int(round_places)
                 if places_int < 0:
                     raise EvaluationError(
                         "round(): decimal places must be non-negative"
                     )
                 from decimal import ROUND_HALF_UP
                 quantizer = Decimal(10) ** -places_int
-                result = value.quantize(quantizer, rounding=ROUND_HALF_UP)
+                result = round_value.quantize(quantizer, rounding=ROUND_HALF_UP)
                 self._record(t, {"fn": fn, "args": args}, result)
                 return result
             raise EvaluationError(f"Unknown function: {fn!r}")

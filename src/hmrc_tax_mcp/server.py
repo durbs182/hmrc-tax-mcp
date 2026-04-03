@@ -19,8 +19,8 @@ try:
     from mcp.types import TextContent, Tool
     _MCP_AVAILABLE = True
 except ImportError:
-    Server = None  # type: ignore[assignment]
-    stdio_server = None  # type: ignore[assignment]
+    Server = None
+    stdio_server = None
     _MCP_AVAILABLE = False
 
     @dataclass

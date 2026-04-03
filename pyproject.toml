@@ -52,13 +52,13 @@ strict = true
 
 [[tool.mypy.overrides]]
 # mcp and anthropic are optional extras — stubs not always available
-module = ["mcp", "mcp.*", "anthropic", "anthropic.*"]
+module = ["mcp", "mcp.*", "anthropic"]
 ignore_missing_imports = true
 ignore_errors = true
 
 [[tool.mypy.overrides]]
 # fastapi and pydantic are optional extras in the dev environment
-module = ["fastapi", "fastapi.*", "pydantic", "pydantic.*"]
+module = ["fastapi", "pydantic", "pydantic.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
