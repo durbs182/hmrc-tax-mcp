@@ -13,6 +13,15 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, cast
 
+from hmrc_tax_mcp.ast.canonical import ast_checksum
+from hmrc_tax_mcp.dsl.compiler import CompileError
+from hmrc_tax_mcp.dsl.compiler import compile_dsl as _compile_dsl
+from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
+from hmrc_tax_mcp.explainer import explain_rule as _explain_rule
+from hmrc_tax_mcp.extractor.nl_extractor import NLExtractor
+from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
+from hmrc_tax_mcp.validation.pipeline import validate_rule as _validate_rule
+
 MCPServer: Any = None
 MCPStdioServer: Any = None
 MCPTextContent: Any = None
@@ -45,15 +54,6 @@ else:
         name: str
         description: str
         inputSchema: dict[str, Any]
-
-from hmrc_tax_mcp.ast.canonical import ast_checksum
-from hmrc_tax_mcp.dsl.compiler import CompileError
-from hmrc_tax_mcp.dsl.compiler import compile_dsl as _compile_dsl
-from hmrc_tax_mcp.evaluator import EvaluationError, Evaluator
-from hmrc_tax_mcp.explainer import explain_rule as _explain_rule
-from hmrc_tax_mcp.extractor.nl_extractor import NLExtractor
-from hmrc_tax_mcp.registry.store import get_rule, get_rule_snapshot, list_rules
-from hmrc_tax_mcp.validation.pipeline import validate_rule as _validate_rule
 
 app = MCPServer("hmrc-tax-mcp") if _MCP_AVAILABLE else None
 
