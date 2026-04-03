@@ -1,0 +1,21 @@
+# Provenance: HMRC PTM056500 and Finance (No. 2) Act 2023 s.18.
+# Money Purchase Annual Allowance (MPAA) = £10,000 (from 6 April 2023).
+# Triggered by flexibly accessing pension savings (e.g. drawdown, UFPLS, flexible annuity).
+# When not triggered, the standard Annual Allowance of £60,000 applies.
+# Alternative Annual Allowance for DB when MPAA in force = £60,000 - £10,000 = £50,000.
+# Source: https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm056500
+
+examples:
+  - description: "MPAA not triggered — standard Annual Allowance £60,000 applies to money-purchase contributions"
+    # HMRC: before any flexible access event the normal AA applies.
+    source: "HMRC PTM056500 — no trigger, full AA"
+    inputs:
+      mpaa_triggered: false
+    expected: 60000
+
+  - description: "MPAA triggered by flexible access — money-purchase contributions capped at £10,000"
+    # HMRC: once flexible access occurs the MPAA of £10,000 applies to DC contributions.
+    source: "HMRC PTM056500 — MPAA in force"
+    inputs:
+      mpaa_triggered: true
+    expected: 10000
