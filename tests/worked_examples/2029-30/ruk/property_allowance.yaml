@@ -1,0 +1,6 @@
+rule_id: property_allowance
+tax_year: "2029-30"
+jurisdiction: "rUK"
+inputs:
+  {}
+expected_output: 1000

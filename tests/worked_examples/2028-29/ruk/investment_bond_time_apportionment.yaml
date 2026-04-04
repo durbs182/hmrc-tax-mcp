@@ -1,0 +1,8 @@
+rule_id: investment_bond_time_apportionment
+tax_year: "2028-29"
+jurisdiction: "rUK"
+inputs:
+  chargeable_gain: 60000
+  uk_years: 8
+  total_years: 10
+expected_output: 48000.0

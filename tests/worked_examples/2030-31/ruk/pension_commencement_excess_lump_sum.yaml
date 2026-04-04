@@ -1,0 +1,7 @@
+rule_id: pension_commencement_excess_lump_sum
+tax_year: "2030-31"
+jurisdiction: "rUK"
+inputs:
+  excess_lump_sum: 50000
+  marginal_rate: 0.4
+expected_output: 20000.0

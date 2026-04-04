@@ -1,0 +1,6 @@
+rule_id: national_insurance_qualifying_years
+tax_year: "2030-31"
+jurisdiction: "rUK"
+inputs:
+  qualifying_years: 20
+expected_output: 0.5714

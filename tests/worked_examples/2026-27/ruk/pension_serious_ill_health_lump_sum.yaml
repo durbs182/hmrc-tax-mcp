@@ -1,0 +1,8 @@
+rule_id: pension_serious_ill_health_lump_sum
+tax_year: "2026-27"
+jurisdiction: "rUK"
+inputs:
+  age: 74
+  lump_sum_amount: 200000
+  marginal_rate: 0.4
+expected_output: 0.0

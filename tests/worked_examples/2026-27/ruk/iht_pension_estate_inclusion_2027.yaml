@@ -1,0 +1,7 @@
+rule_id: iht_pension_estate_inclusion_2027
+tax_year: "2026-27"
+jurisdiction: "rUK"
+inputs:
+  is_2027_or_later: true
+  pension_fund_value: 300000
+expected_output: 300000

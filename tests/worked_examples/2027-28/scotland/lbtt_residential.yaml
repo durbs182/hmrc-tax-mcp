@@ -1,0 +1,6 @@
+rule_id: lbtt_residential
+tax_year: "2027-28"
+jurisdiction: "scotland"
+inputs:
+  purchase_price: 300000
+expected_output: 4600.0

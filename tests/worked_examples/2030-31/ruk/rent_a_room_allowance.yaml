@@ -1,0 +1,6 @@
+rule_id: rent_a_room_allowance
+tax_year: "2030-31"
+jurisdiction: "rUK"
+inputs:
+  {}
+expected_output: 7500
