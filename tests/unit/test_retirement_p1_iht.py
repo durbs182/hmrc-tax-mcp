@@ -171,3 +171,44 @@ class TestStatePensionWeekly:
         """State Pension is DWP-set (not devolved) — no Scotland variant."""
         entry = get_rule("state_pension_weekly", jurisdiction="scotland", tax_year="2025-26")
         assert entry is None
+
+
+class TestIhtRnrbTaper:
+    """RNRB tapers by £1 per £2 above £2m, floor at £0."""
+
+    def test_estate_at_threshold_full_rnrb(self) -> None:
+        """Estate exactly £2m — no taper, full RNRB £175,000."""
+        result = _eval("iht_rnrb_taper", {"estate_value": 2000000})
+        assert result == Decimal("175000.00")
+
+    def test_estate_below_threshold_full_rnrb(self) -> None:
+        """Estate £1.5m — no taper, full RNRB £175,000."""
+        result = _eval("iht_rnrb_taper", {"estate_value": 1500000})
+        assert result == Decimal("175000.00")
+
+    def test_partial_taper_100k_excess(self) -> None:
+        """Estate £2.1m — excess £100k; taper £50k → RNRB £125,000."""
+        result = _eval("iht_rnrb_taper", {"estate_value": 2100000})
+        assert result == Decimal("125000.00")
+
+    def test_partial_taper_200k_excess(self) -> None:
+        """Estate £2.2m — excess £200k; taper £100k → RNRB £75,000."""
+        result = _eval("iht_rnrb_taper", {"estate_value": 2200000})
+        assert result == Decimal("75000.00")
+
+    def test_full_taper_exactly_zero(self) -> None:
+        """Estate £2.35m — taper = £175k → RNRB £0."""
+        result = _eval("iht_rnrb_taper", {"estate_value": 2350000})
+        assert result == Decimal("0.00")
+
+    def test_beyond_full_taper_floored_at_zero(self) -> None:
+        """Estate £3m — taper exceeds RNRB, clamped to £0."""
+        result = _eval("iht_rnrb_taper", {"estate_value": 3000000})
+        assert result == Decimal("0.00")
+
+    def test_all_years_same_checksum(self) -> None:
+        base = get_rule("iht_rnrb_taper", jurisdiction="rUK", tax_year="2025-26")
+        assert base is not None
+        for yr in ALL_YEARS[1:]:
+            e = get_rule("iht_rnrb_taper", jurisdiction="rUK", tax_year=yr)
+            assert e is not None and e.checksum == base.checksum, f"Mismatch for {yr}"

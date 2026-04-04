@@ -1,5 +1,5 @@
 rule_id: prr_letting_relief
-version: 1.0.0
+version: 1.0.1
 tax_year: 2028-29
 jurisdiction: rUK
 title: Letting Relief — PRR Extension for Let Periods (rUK 2028-29)
@@ -13,7 +13,7 @@ description: 'Computes the Letting Relief available on a capital gain where a fo
   after PRR to reduce the remaining chargeable gain.
 
   '
-dsl_source: '  return if shared_occupancy then round(min(prr_amount, min(letting_gain, 40000)), 2) else 0
+dsl_source: '  return if shared_occupancy then round(max(min(prr_amount, min(letting_gain, 40000)), 0), 2) else 0
 
   '
 ast:
@@ -26,23 +26,28 @@ ast:
     name: round
     args:
     - node: CALL
-      name: min
+      name: max
       args:
-      - node: VAR
-        name: prr_amount
       - node: CALL
         name: min
         args:
         - node: VAR
-          name: letting_gain
-        - node: CONST
-          value: 40000
+          name: prr_amount
+        - node: CALL
+          name: min
+          args:
+          - node: VAR
+            name: letting_gain
+          - node: CONST
+            value: 40000
+      - node: CONST
+        value: 0
     - node: CONST
       value: 2
   else:
     node: CONST
     value: 0
-checksum: 8997bfe091971d63f44cf18de79567137fdaceff024c302ea0507dd0a2506a69
+checksum: 0840f7a45ae0a946a32eb70f57da5d48498ca554c22a91b2cefe816ae2a093da
 citations:
 - label: HMRC – CG64700 Letting Relief (shared occupancy requirement from April 2020)
   url: https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg64700

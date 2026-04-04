@@ -116,6 +116,11 @@ class TestPrrLettingRelief:
         # net chargeable = £200k - £115k - £40k = £45,000
         assert total_gain - prr - letting == Decimal("45000.00")
 
+    def test_negative_inputs_clamped_to_zero(self) -> None:
+        """Negative prr_amount or letting_gain must never return negative relief."""
+        assert _letting(-1000, 5000, True) == Decimal("0")
+        assert _letting(5000, -1000, True) == Decimal("0")
+
     def test_all_years_same_checksum(self) -> None:
         base = get_rule("prr_letting_relief", jurisdiction="rUK", tax_year="2025-26")
         assert base is not None
