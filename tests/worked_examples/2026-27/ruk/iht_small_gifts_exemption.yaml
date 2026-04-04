@@ -1,0 +1,8 @@
+rule_id: iht_small_gifts_exemption
+tax_year: 2026-27
+jurisdiction: rUK
+examples:
+- description: Per-recipient small gifts limit — £250
+  source: IHTA 1984 s.20
+  inputs: {}
+  expected: 250

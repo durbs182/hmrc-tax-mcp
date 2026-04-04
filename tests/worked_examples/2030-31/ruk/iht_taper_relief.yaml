@@ -1,0 +1,24 @@
+rule_id: iht_taper_relief
+tax_year: 2030-31
+jurisdiction: rUK
+examples:
+- description: 2 years — no relief (0%)
+  source: IHTA 1984 s.7(4)
+  inputs:
+    years_since_gift: 2
+  expected: 0
+- description: 3 years — 20% relief
+  source: IHTA 1984 s.7(4)
+  inputs:
+    years_since_gift: 3
+  expected: 20
+- description: 5 years — 60% relief
+  source: IHTA 1984 s.7(4)
+  inputs:
+    years_since_gift: 5
+  expected: 60
+- description: 7 years — fully exempt (100%)
+  source: IHTA 1984 s.7(4)
+  inputs:
+    years_since_gift: 7
+  expected: 100

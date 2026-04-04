@@ -1,0 +1,14 @@
+rule_id: sdlt_higher_rates
+tax_year: 2028-29
+jurisdiction: rUK
+examples:
+- description: £300k second home — surcharge £15,000 (5%)
+  source: Autumn Budget 2024
+  inputs:
+    purchase_price: 300000
+  expected: 15000.0
+- description: £500k buy-to-let — surcharge £25,000 (5%)
+  source: Autumn Budget 2024
+  inputs:
+    purchase_price: 500000
+  expected: 25000.0

@@ -1,0 +1,8 @@
+rule_id: care_home_capital_threshold_scotland
+tax_year: 2029-30
+jurisdiction: scotland
+examples:
+- description: Upper capital threshold Scotland — must self-fund above £32,750
+  source: Scottish Government
+  inputs: {}
+  expected: 32750

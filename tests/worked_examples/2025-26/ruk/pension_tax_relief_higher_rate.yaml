@@ -1,0 +1,22 @@
+rule_id: pension_tax_relief_higher_rate
+tax_year: 2025-26
+jurisdiction: rUK
+examples:
+- description: Higher-rate (40%) payer, £10k gross contribution — additional relief £2,000
+  source: HMRC pension tax relief
+  inputs:
+    marginal_rate: 0.4
+    gross_contribution: 10000
+  expected: 2000.0
+- description: Additional-rate (45%) payer, £10k gross — additional relief £2,500
+  source: HMRC pension tax relief
+  inputs:
+    marginal_rate: 0.45
+    gross_contribution: 10000
+  expected: 2500.0
+- description: Basic-rate payer — additional relief £0 (all relief already given at source)
+  source: HMRC pension tax relief
+  inputs:
+    marginal_rate: 0.2
+    gross_contribution: 10000
+  expected: 0.0

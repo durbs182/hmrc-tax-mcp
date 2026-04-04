@@ -1,0 +1,8 @@
+rule_id: blind_persons_allowance
+tax_year: 2027-28
+jurisdiction: rUK
+examples:
+- description: Blind person — BPA £3,070
+  source: HMRC BPA guidance
+  inputs: {}
+  expected: 3070

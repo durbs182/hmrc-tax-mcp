@@ -1,0 +1,22 @@
+rule_id: iht_rnrb_downsizing_addition
+tax_year: 2028-29
+jurisdiction: rUK
+examples:
+- description: Lost RNRB £100k, qualifying estate £150k — addition £100,000
+  source: IHTA 1984 s.8FA
+  inputs:
+    lost_rnrb_amount: 100000
+    qualifying_estate_value: 150000
+  expected: 100000.0
+- description: Lost RNRB £175k, qualifying estate £50k — capped at £50,000
+  source: IHTA 1984 s.8FA
+  inputs:
+    lost_rnrb_amount: 175000
+    qualifying_estate_value: 50000
+  expected: 50000.0
+- description: No qualifying estate — addition £0
+  source: IHTA 1984 s.8FA
+  inputs:
+    lost_rnrb_amount: 175000
+    qualifying_estate_value: 0
+  expected: 0.0

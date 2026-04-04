@@ -1,0 +1,18 @@
+rule_id: investment_bond_top_slicing_relief
+tax_year: 2029-30
+jurisdiction: rUK
+examples:
+- description: Full tax £4k, slice tax £2k, 10 years — relief £20,000
+  source: IPTM3820
+  inputs:
+    full_tax_due: 4000
+    tax_on_annual_slice: 2000
+    policy_years: 10
+  expected: 20000.0
+- description: Same marginal rate on slice and full gain — zero relief
+  source: IPTM3820
+  inputs:
+    full_tax_due: 2000
+    tax_on_annual_slice: 2000
+    policy_years: 5
+  expected: 0.0

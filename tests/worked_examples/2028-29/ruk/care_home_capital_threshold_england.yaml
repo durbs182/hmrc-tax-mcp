@@ -1,0 +1,8 @@
+rule_id: care_home_capital_threshold_england
+tax_year: 2028-29
+jurisdiction: rUK
+examples:
+- description: Upper capital threshold — must self-fund above £23,250
+  source: Care Act 2014
+  inputs: {}
+  expected: 23250
