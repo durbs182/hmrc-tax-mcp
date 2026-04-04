@@ -1,0 +1,24 @@
+rule_id: iht_rnrb_taper
+tax_year: 2026-27
+jurisdiction: rUK
+examples:
+- description: Estate £2m or under — full RNRB £175,000
+  source: HMRC RNRB guidance
+  inputs:
+    estate_value: 2000000
+  expected: 175000.0
+- description: Estate £2.1m — taper £50k → RNRB £125,000
+  source: HMRC RNRB guidance
+  inputs:
+    estate_value: 2100000
+  expected: 125000.0
+- description: Estate £2.35m — taper £175k → RNRB £0
+  source: HMRC RNRB guidance
+  inputs:
+    estate_value: 2350000
+  expected: 0.0
+- description: Estate £3m — taper exceeds RNRB → floored at £0
+  source: HMRC RNRB guidance
+  inputs:
+    estate_value: 3000000
+  expected: 0.0

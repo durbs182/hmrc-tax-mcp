@@ -1,0 +1,8 @@
+# Standard Annual Allowance (Finance (No. 2) Act 2023 s.18, effective 6 April 2023).
+# £60,000 applies when neither the Tapered Annual Allowance nor the MPAA is in force.
+# Source: https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates
+examples:
+  - description: "Standard Annual Allowance — £60,000 returned for all taxpayers not subject to taper or MPAA"
+    source: "HMRC Pension schemes rates — annual allowance"
+    inputs: {}
+    expected: 60000

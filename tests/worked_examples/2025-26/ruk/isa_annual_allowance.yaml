@@ -1,0 +1,8 @@
+# ISA annual subscription limit — frozen at £20,000 per person per tax year.
+# Applies across all ISA types (cash, stocks & shares, innovative finance, LISA up to £4,000).
+# Source: https://www.gov.uk/individual-savings-accounts
+examples:
+  - description: "ISA annual subscription limit — £20,000"
+    source: "HMRC ISA guidance — annual subscription limit"
+    inputs: {}
+    expected: 20000

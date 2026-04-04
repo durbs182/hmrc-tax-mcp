@@ -1,0 +1,7 @@
+# Capital gains within an ISA wrapper are exempt from UK Capital Gains Tax.
+# Source: https://www.gov.uk/individual-savings-accounts/how-isas-work
+examples:
+  - description: "Capital gain realised inside an ISA — zero CGT due regardless of gain size"
+    source: "HMRC ISA guidance — CGT exemption"
+    inputs: {}
+    expected: 0

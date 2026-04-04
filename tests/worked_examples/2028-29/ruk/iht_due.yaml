@@ -1,0 +1,44 @@
+# IHT payable on death estate at 40% on amount above available NRB + RNRB.
+# Inputs: estate_value (net estate after debts/reliefs), nrb_available, rnrb_available.
+# Note: 36% charitable rate not implemented here — see iht_charity_reduced_rate (P3).
+# Source: https://www.gov.uk/inheritance-tax/overview
+examples:
+  - description: "Estate £600,000, NRB £325,000, no RNRB — IHT = 40% × £275,000 = £110,000"
+    source: "arithmetic from HMRC IHT guidance"
+    inputs:
+      estate_value: 600000
+      nrb_available: 325000
+      rnrb_available: 0
+    expected: 110000.0
+
+  - description: "Estate £800,000, NRB £325,000, RNRB £175,000 — IHT = 40% × £300,000 = £120,000"
+    source: "arithmetic from HMRC IHT guidance"
+    inputs:
+      estate_value: 800000
+      nrb_available: 325000
+      rnrb_available: 175000
+    expected: 120000.0
+
+  - description: "Estate below NRB threshold — zero IHT"
+    source: "HMRC IHT guidance — estate below threshold"
+    inputs:
+      estate_value: 300000
+      nrb_available: 325000
+      rnrb_available: 0
+    expected: 0.0
+
+  - description: "Surviving spouse with full transferred NRB+RNRB — estate £950,000, combined threshold £1m, zero IHT"
+    source: "HMRC IHT — transferable allowances"
+    inputs:
+      estate_value: 950000
+      nrb_available: 650000
+      rnrb_available: 350000
+    expected: 0.0
+
+  - description: "Large estate — £2m, NRB £325,000, RNRB £0 — IHT = 40% × £1,675,000 = £670,000"
+    source: "arithmetic from HMRC IHT guidance"
+    inputs:
+      estate_value: 2000000
+      nrb_available: 325000
+      rnrb_available: 0
+    expected: 670000.0

@@ -1,0 +1,37 @@
+# Letting Relief — additional CGT relief where a home was let AND the owner shared occupation.
+# Since 6 April 2020, letting relief only applies when the owner lived in the property
+# alongside the tenant (shared occupancy). It is capped at the LOWER of:
+#   (1) the PRR amount, (2) the gain attributable to letting, (3) £40,000.
+# Source: https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg64700
+examples:
+  - description: "Shared occupancy: letting gain £30,000 is the binding cap — relief = £30,000"
+    source: "HMRC CG64700 — letting relief with shared occupancy"
+    inputs:
+      prr_amount: 50000
+      letting_gain: 30000
+      shared_occupancy: true
+    expected: 30000.0
+
+  - description: "Shared occupancy: £40,000 statutory cap is the binding limit"
+    source: "HMRC CG64700 — £40,000 statutory cap"
+    inputs:
+      prr_amount: 60000
+      letting_gain: 45000
+      shared_occupancy: true
+    expected: 40000.0
+
+  - description: "Shared occupancy: PRR is the binding cap (lower than letting gain and £40k)"
+    source: "HMRC CG64700 — PRR as binding cap"
+    inputs:
+      prr_amount: 15000
+      letting_gain: 20000
+      shared_occupancy: true
+    expected: 15000.0
+
+  - description: "No shared occupancy — letting relief is zero (post-April 2020 rule)"
+    source: "HMRC CG64700 — shared occupancy condition not met"
+    inputs:
+      prr_amount: 50000
+      letting_gain: 30000
+      shared_occupancy: false
+    expected: 0.0

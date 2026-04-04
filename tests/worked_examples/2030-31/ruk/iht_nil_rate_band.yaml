@@ -1,0 +1,8 @@
+# Inheritance Tax Nil Rate Band — frozen at £325,000 until at least 2030.
+# The NRB is the threshold below which no IHT is charged on the death estate.
+# Source: https://www.gov.uk/inheritance-tax/overview
+examples:
+  - description: "IHT Nil Rate Band — £325,000 for all years to 2030-31"
+    source: "HMRC IHT rates and thresholds — NRB frozen"
+    inputs: {}
+    expected: 325000
