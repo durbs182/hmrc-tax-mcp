@@ -1,0 +1,19 @@
+rule_id: lifetime_isa_annual_bonus
+tax_year: 2026-27
+jurisdiction: rUK
+examples:
+- description: Full £4,000 contribution — maximum bonus £1,000
+  source: HMRC LISA guidance
+  inputs:
+    contributions: 4000
+  expected: 1000.0
+- description: £2,000 contribution — bonus £500
+  source: HMRC LISA guidance
+  inputs:
+    contributions: 2000
+  expected: 500.0
+- description: £5,000 contribution — capped at £4,000 base; bonus £1,000
+  source: HMRC LISA guidance
+  inputs:
+    contributions: 5000
+  expected: 1000.0

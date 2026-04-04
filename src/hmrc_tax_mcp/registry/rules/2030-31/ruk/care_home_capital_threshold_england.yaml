@@ -1,0 +1,27 @@
+rule_id: care_home_capital_threshold_england
+version: 1.0.0
+tax_year: 2030-31
+jurisdiction: rUK
+title: Care Home Capital Threshold — Upper Limit (England) (rUK 2030-31)
+description: 'Returns the upper capital threshold for residential care in England (£23,250 for 2025-26). If a person''s capital
+  (savings, property) exceeds this threshold, they must meet the full cost of their care. Between £14,250 and £23,250, local
+  authority means-tested financial support is available on a sliding scale. Below £14,250, the lower threshold, capital is
+  generally disregarded for means-testing. Note: These thresholds are set under the Care Act 2014 and may differ from social
+  care charges set by councils. Returns the upper self-funding threshold in pounds.
+
+  '
+dsl_source: '  return 23250
+
+  '
+ast:
+  node: CONST
+  value: 23250
+checksum: 0d5ccc787056392c19cb1c47ca5c09b15d55c52eb9baa9bf33f0f0aec935b120
+citations:
+- label: Care Act 2014 — Capital thresholds for social care
+  url: https://www.legislation.gov.uk/ukpga/2014/23
+- label: DHSC — Charging for residential care guidance
+  url: https://www.gov.uk/government/publications/fairer-charging-policies-for-home-care-and-other-non-residential-social-services
+provenance: manual
+published_at: '2025-04-06T00:00:00Z'
+reviewed_by: null

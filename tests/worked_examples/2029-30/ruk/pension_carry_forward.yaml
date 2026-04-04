@@ -1,0 +1,28 @@
+rule_id: pension_carry_forward
+tax_year: 2029-30
+jurisdiction: rUK
+examples:
+- description: All 3 prior years fully used — no carry forward
+  source: HMRC guidance
+  inputs:
+    annual_allowance: 60000
+    pension_input_y1: 60000
+    pension_input_y2: 60000
+    pension_input_y3: 60000
+  expected: 0
+- description: Each prior year had £10k unused — carry forward £30,000
+  source: HMRC guidance
+  inputs:
+    annual_allowance: 60000
+    pension_input_y1: 50000
+    pension_input_y2: 50000
+    pension_input_y3: 50000
+  expected: 30000
+- description: One year fully used, two years nil input — carry forward £120,000
+  source: HMRC guidance
+  inputs:
+    annual_allowance: 60000
+    pension_input_y1: 60000
+    pension_input_y2: 0
+    pension_input_y3: 0
+  expected: 120000

@@ -1,0 +1,24 @@
+rule_id: sdlt_residential
+tax_year: 2030-31
+jurisdiction: rUK
+examples:
+- description: £200k property — all in nil band; SDLT £0
+  source: HMRC SDLT rates
+  inputs:
+    purchase_price: 200000
+  expected: 0.0
+- description: £300k property — £50k in 5% band; SDLT £2,500
+  source: HMRC SDLT rates
+  inputs:
+    purchase_price: 300000
+  expected: 2500.0
+- description: £600k property — £350k in 5% band; SDLT £17,500
+  source: HMRC SDLT rates
+  inputs:
+    purchase_price: 600000
+  expected: 17500.0
+- description: '£2m property — SDLT: £0 + £33,750 + £57,500 + £60,000 = £151,250'
+  source: HMRC SDLT rates
+  inputs:
+    purchase_price: 2000000
+  expected: 151250.0

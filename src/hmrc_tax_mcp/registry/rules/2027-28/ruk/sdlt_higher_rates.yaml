@@ -1,0 +1,38 @@
+rule_id: sdlt_higher_rates
+version: 1.0.0
+tax_year: 2027-28
+jurisdiction: rUK
+title: SDLT Higher Rates Surcharge — Additional Dwellings (rUK 2027-28)
+description: 'Computes the SDLT Higher Rates surcharge for additional residential dwellings or purchases by non-UK residents.
+  From 31 October 2024, the surcharge is 5% of the full purchase price (increased from 3% by Autumn Budget 2024). This amount
+  is added to the standard `sdlt_residential` amount. Applies when purchasing an additional residential property (e.g. buy-to-let,
+  second home) or when a non-UK resident individual purchases residential property in England or NI. Input variable: `purchase_price`
+  — full property purchase price. Returns surcharge in pounds.
+
+  '
+dsl_source: '  return round(purchase_price * 0.05, 2)
+
+  '
+ast:
+  node: CALL
+  name: round
+  args:
+  - node: MUL
+    args:
+    - node: VAR
+      name: purchase_price
+    - node: CONST
+      value: 0.05
+  - node: CONST
+    value: 2
+checksum: 6a126a028b0872c3b481093676e7e224cf2d46795805b9d6be0475a2f1985b93
+citations:
+- label: HMRC — SDLT higher rates for additional dwellings
+  url: https://www.gov.uk/stamp-duty-land-tax/residential-property-rates#higher-rates
+- label: Finance Act 2016 Sch 4ZA — Higher rates SDLT
+  url: https://www.legislation.gov.uk/ukpga/2016/24
+- label: Autumn Budget 2024 — Surcharge increase to 5%
+  url: https://www.gov.uk/government/publications/autumn-budget-2024
+provenance: manual
+published_at: '2025-04-06T00:00:00Z'
+reviewed_by: null

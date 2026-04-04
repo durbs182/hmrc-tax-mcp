@@ -1,0 +1,16 @@
+rule_id: pension_net_pay_arrangement
+tax_year: 2027-28
+jurisdiction: rUK
+examples:
+- description: Basic-rate payer, £5k gross contribution — relief £1,000
+  source: HMRC net pay guidance
+  inputs:
+    marginal_rate: 0.2
+    gross_contribution: 5000
+  expected: 1000.0
+- description: Higher-rate payer, £5k gross contribution — relief £2,000
+  source: HMRC net pay guidance
+  inputs:
+    marginal_rate: 0.4
+    gross_contribution: 5000
+  expected: 2000.0

@@ -1,0 +1,14 @@
+rule_id: iht_annual_gift_exemption
+tax_year: 2029-30
+jurisdiction: rUK
+examples:
+- description: Prior year exemption fully used — only £3,000 available
+  source: IHTA 1984 s.19
+  inputs:
+    prior_year_unused: false
+  expected: 3000
+- description: Prior year exemption unused — £6,000 available (carry-forward)
+  source: IHTA 1984 s.19
+  inputs:
+    prior_year_unused: true
+  expected: 6000

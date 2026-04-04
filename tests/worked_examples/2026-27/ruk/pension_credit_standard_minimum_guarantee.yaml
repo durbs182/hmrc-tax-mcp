@@ -1,0 +1,14 @@
+rule_id: pension_credit_standard_minimum_guarantee
+tax_year: 2026-27
+jurisdiction: rUK
+examples:
+- description: Single pensioner — minimum guarantee £218.15/week
+  source: DWP Pension Credit 2025-26
+  inputs:
+    is_couple: false
+  expected: 218.15
+- description: Couple — minimum guarantee £332.95/week
+  source: DWP Pension Credit 2025-26
+  inputs:
+    is_couple: true
+  expected: 332.95

@@ -1,0 +1,25 @@
+rule_id: iht_potentially_exempt_transfer
+tax_year: 2025-26
+jurisdiction: rUK
+examples:
+- description: Gift £500k, full NRB remaining, dies in yr 5 (60% relief) — IHT £28,000
+  source: IHTA 1984 s.3A
+  inputs:
+    gift_amount: 500000
+    nil_rate_band_remaining: 325000
+    taper_relief_percentage: 60
+  expected: 28000.0
+- description: Gift £500k, no NRB left, dies in yr 2 (no relief) — IHT £200,000
+  source: IHTA 1984 s.3A
+  inputs:
+    gift_amount: 500000
+    nil_rate_band_remaining: 0
+    taper_relief_percentage: 0
+  expected: 200000.0
+- description: Gift within NRB — no IHT due
+  source: IHTA 1984 s.3A
+  inputs:
+    gift_amount: 200000
+    nil_rate_band_remaining: 325000
+    taper_relief_percentage: 0
+  expected: 0.0

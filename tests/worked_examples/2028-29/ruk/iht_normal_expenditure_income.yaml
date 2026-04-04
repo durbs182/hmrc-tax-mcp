@@ -1,0 +1,25 @@
+rule_id: iht_normal_expenditure_income
+tax_year: 2028-29
+jurisdiction: rUK
+examples:
+- description: All three conditions met — gift is immediately IHT-exempt
+  source: IHTA 1984 s.21
+  inputs:
+    is_habitual: true
+    paid_from_income: true
+    leaves_adequate_living_standard: true
+  expected: true
+- description: Not habitual (one-off gift) — not exempt
+  source: IHTA 1984 s.21
+  inputs:
+    is_habitual: false
+    paid_from_income: true
+    leaves_adequate_living_standard: true
+  expected: false
+- description: Paid from capital — not exempt
+  source: IHTA 1984 s.21
+  inputs:
+    is_habitual: true
+    paid_from_income: false
+    leaves_adequate_living_standard: true
+  expected: false

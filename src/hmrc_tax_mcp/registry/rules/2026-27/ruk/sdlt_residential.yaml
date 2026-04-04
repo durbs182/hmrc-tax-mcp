@@ -1,0 +1,100 @@
+rule_id: sdlt_residential
+version: 1.0.0
+tax_year: 2026-27
+jurisdiction: rUK
+title: Stamp Duty Land Tax — Residential Property (England & NI) (rUK 2026-27)
+description: 'Computes Stamp Duty Land Tax (SDLT) on a residential property purchase in England and Northern Ireland. Applies
+  standard residential rates (2025-26): 0% on the first £250,000; 5% on £250,001-£925,000; 10% on £925,001-£1,500,000; 12%
+  above £1,500,000. SDLT is calculated on a slice basis (not flat rate). For additional dwellings or non-UK residents, use
+  `sdlt_higher_rates` to compute the surcharge separately. SDLT does not apply in Scotland (use `lbtt_residential` — P3) or
+  Wales (LTT). Input variable: `purchase_price` — full property purchase price in pounds. Returns SDLT due in pounds.
+
+  '
+dsl_source: "  let band2 = max(min(purchase_price, 925000) - 250000, 0) * 0.05\n  let band3 = max(min(purchase_price, 1500000)\
+  \ - 925000, 0) * 0.10\n  let band4 = max(purchase_price - 1500000, 0) * 0.12\n  return round(band2 + band3 + band4, 2)\n"
+ast:
+  node: LET
+  bindings:
+  - - band2
+    - node: MUL
+      args:
+      - node: CALL
+        name: max
+        args:
+        - node: SUB
+          args:
+          - node: CALL
+            name: min
+            args:
+            - node: VAR
+              name: purchase_price
+            - node: CONST
+              value: 925000
+          - node: CONST
+            value: 250000
+        - node: CONST
+          value: 0
+      - node: CONST
+        value: 0.05
+  - - band3
+    - node: MUL
+      args:
+      - node: CALL
+        name: max
+        args:
+        - node: SUB
+          args:
+          - node: CALL
+            name: min
+            args:
+            - node: VAR
+              name: purchase_price
+            - node: CONST
+              value: 1500000
+          - node: CONST
+            value: 925000
+        - node: CONST
+          value: 0
+      - node: CONST
+        value: 0.1
+  - - band4
+    - node: MUL
+      args:
+      - node: CALL
+        name: max
+        args:
+        - node: SUB
+          args:
+          - node: VAR
+            name: purchase_price
+          - node: CONST
+            value: 1500000
+        - node: CONST
+          value: 0
+      - node: CONST
+        value: 0.12
+  body:
+    node: CALL
+    name: round
+    args:
+    - node: ADD
+      args:
+      - node: ADD
+        args:
+        - node: VAR
+          name: band2
+        - node: VAR
+          name: band3
+      - node: VAR
+        name: band4
+    - node: CONST
+      value: 2
+checksum: 029c02a67434cf69e92636cc550f7a8e2e18a249b1e3a5fb4db366c6a78d4a42
+citations:
+- label: HMRC — SDLT rates for residential properties
+  url: https://www.gov.uk/stamp-duty-land-tax/residential-property-rates
+- label: Finance Act 2003 Sch 4ZA — SDLT
+  url: https://www.legislation.gov.uk/ukpga/2003/14/schedule/4ZA
+provenance: manual
+published_at: '2025-04-06T00:00:00Z'
+reviewed_by: null

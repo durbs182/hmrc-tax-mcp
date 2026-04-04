@@ -1,0 +1,25 @@
+rule_id: pension_flexi_access_trigger
+tax_year: 2028-29
+jurisdiction: rUK
+examples:
+- description: FAD — triggers MPAA
+  source: HMRC guidance
+  inputs:
+    is_flexi_access_drawdown: true
+    is_ufpls: false
+    is_flexible_annuity: false
+  expected: true
+- description: UFPLS — triggers MPAA
+  source: HMRC guidance
+  inputs:
+    is_flexi_access_drawdown: false
+    is_ufpls: true
+    is_flexible_annuity: false
+  expected: true
+- description: PCLS only — does not trigger MPAA
+  source: HMRC guidance
+  inputs:
+    is_flexi_access_drawdown: false
+    is_ufpls: false
+    is_flexible_annuity: false
+  expected: false

@@ -1,0 +1,27 @@
+rule_id: care_home_capital_threshold_scotland
+version: 1.0.0
+tax_year: 2028-29
+jurisdiction: scotland
+title: Care Home Capital Threshold — Upper Limit (Scotland) (2028-29)
+description: 'Returns the upper capital threshold for residential care in Scotland (£32,750 for 2025-26). Social care funding
+  in Scotland is devolved. If a person''s capital exceeds £32,750, they must meet the full cost of residential care. Between
+  £19,500 and £32,750, means-tested contributions apply. Below £19,500 (lower threshold), capital is generally disregarded.
+  Note: Scotland provides free personal care for eligible people over 65 (Personal and Nursing Care). Returns the upper self-funding
+  threshold in pounds.
+
+  '
+dsl_source: '  return 32750
+
+  '
+ast:
+  node: CONST
+  value: 32750
+checksum: d5ba6ea9fcebfeb99bbcbad06144201f799a9b0d5ec0fae82f2bfe08d80d5ddd
+citations:
+- label: Scottish Government — Social care funding thresholds
+  url: https://www.gov.scot/publications/social-care-support-self-directed-support/
+- label: Community Care and Health (Scotland) Act 2002
+  url: https://www.legislation.gov.uk/asp/2002/5
+provenance: manual
+published_at: '2025-04-06T00:00:00Z'
+reviewed_by: null

@@ -1,0 +1,16 @@
+rule_id: investment_bond_chargeable_gain
+tax_year: 2027-28
+jurisdiction: rUK
+examples:
+- description: Proceeds £150k, premiums £100k — gain £50,000
+  source: HMRC CG57200
+  inputs:
+    proceeds: 150000
+    total_premiums_paid: 100000
+  expected: 50000.0
+- description: Proceeds less than premiums — gain £0 (no negative gain)
+  source: HMRC CG57200
+  inputs:
+    proceeds: 80000
+    total_premiums_paid: 100000
+  expected: 0.0

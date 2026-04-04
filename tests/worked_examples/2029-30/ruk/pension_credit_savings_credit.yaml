@@ -1,0 +1,25 @@
+rule_id: pension_credit_savings_credit
+tax_year: 2029-30
+jurisdiction: rUK
+examples:
+- description: New SPA claimant (post-2016) — zero Savings Credit
+  source: State Pension Credit Act 2002 s.3
+  inputs:
+    qualifying_income: 250.0
+    is_couple: false
+    reached_spa_before_2016: false
+  expected: 0
+- description: Pre-2016 SPA single, income £200/wk — credit 60% × (200-174.49) = £15.31
+  source: DWP guidance
+  inputs:
+    qualifying_income: 200.0
+    is_couple: false
+    reached_spa_before_2016: true
+  expected: 15.31
+- description: Pre-2016 SPA single, high income — capped at £17.29
+  source: DWP guidance
+  inputs:
+    qualifying_income: 250.0
+    is_couple: false
+    reached_spa_before_2016: true
+  expected: 17.29
