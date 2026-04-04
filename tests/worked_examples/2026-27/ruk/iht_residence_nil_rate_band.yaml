@@ -1,0 +1,8 @@
+# Residence Nil Rate Band — up to £175,000 on a qualifying residence passing to direct descendants.
+# Frozen at £175,000 until at least 2030. Subject to taper for estates over £2m (see iht_rnrb_taper).
+# Source: https://www.gov.uk/guidance/inheritance-tax-and-the-residence-nil-rate-band
+examples:
+  - description: "Maximum RNRB — £175,000 where qualifying residence passes to direct descendants"
+    source: "HMRC RNRB guidance — maximum rate"
+    inputs: {}
+    expected: 175000

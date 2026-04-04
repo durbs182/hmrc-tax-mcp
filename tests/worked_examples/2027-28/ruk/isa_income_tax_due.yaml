@@ -1,0 +1,8 @@
+# Income within an ISA wrapper is exempt from UK income tax.
+# The ISA wrapper removes all income (interest, dividends, rental) from the income tax computation.
+# Source: https://www.gov.uk/individual-savings-accounts/how-isas-work
+examples:
+  - description: "Income from ISA holdings — zero income tax due regardless of amount"
+    source: "HMRC ISA guidance — income tax exemption"
+    inputs: {}
+    expected: 0

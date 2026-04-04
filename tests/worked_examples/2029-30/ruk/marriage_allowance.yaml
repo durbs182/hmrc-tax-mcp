@@ -1,0 +1,8 @@
+# Marriage Allowance — £1,260 transferred from non-taxpayer to basic-rate spouse/civil partner.
+# Tax credit for recipient = £1,260 × 20% = £252.
+# Source: https://www.gov.uk/marriage-allowance
+examples:
+  - description: "Marriage allowance claimed — tax credit of £252 applied to recipient's liability"
+    source: "HMRC Marriage Allowance guidance"
+    inputs: {}
+    expected: 252

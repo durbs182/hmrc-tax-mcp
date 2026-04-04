@@ -1,0 +1,40 @@
+# Private Residence Relief (PRR) exempts the proportion of a capital gain attributable
+# to periods of owner-occupation as the main residence.
+# Last 9 months of ownership always qualify (reduced from 18 months in April 2020).
+# Source: https://www.gov.uk/tax-when-you-sell-your-home
+examples:
+  - description: "Always main residence — full gain exempt"
+    # 120 months residence out of 120 total: qualifying = 120 + min(0, 9) = 120; fraction = 1
+    source: "HMRC CGT — full PPR relief"
+    inputs:
+      gain: 200000
+      residence_months: 120
+      total_months: 120
+    expected: 200000.0
+
+  - description: "Lived there 60 of 120 months — partial relief with 9-month final period"
+    # qualifying = 60 + min(60, 9) = 69; fraction = 69/120 = 0.575; relief = £100,000 × 0.575 = £57,500
+    source: "arithmetic from HMRC PRR guidance"
+    inputs:
+      gain: 100000
+      residence_months: 60
+      total_months: 120
+    expected: 57500.0
+
+  - description: "Never lived there (buy-to-let) — only last 9 months qualify"
+    # qualifying = 0 + min(120, 9) = 9; fraction = 9/120 = 0.075; relief = £200,000 × 0.075 = £15,000
+    source: "HMRC PRR — final period only"
+    inputs:
+      gain: 200000
+      residence_months: 0
+      total_months: 120
+    expected: 15000.0
+
+  - description: "Lived there 108 of 120 months — near-full relief"
+    # qualifying = 108 + min(12, 9) = 117; fraction = 117/120 = 0.975; relief = £80,000 × 0.975 = £78,000
+    source: "arithmetic from HMRC PRR guidance"
+    inputs:
+      gain: 80000
+      residence_months: 108
+      total_months: 120
+    expected: 78000.0

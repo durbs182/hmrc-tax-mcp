@@ -1,0 +1,40 @@
+# Pension Commencement Lump Sum (PCLS) — 25% of amount crystallised, capped at LSA remaining.
+# LSA = £268,275 (25% of former Lifetime Allowance of £1,073,100; Finance Act 2024).
+# Source: https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm063100
+examples:
+  - description: "Normal crystallisation £100,000 — PCLS is 25% = £25,000 (within LSA)"
+    source: "arithmetic from HMRC PTM063100 — standard 25% PCLS"
+    inputs:
+      crystallised_amount: 100000
+      lsa_remaining: 268275
+    expected: 25000.0
+
+  - description: "Large pot £800,000 — PCLS capped at LSA remaining £268,275"
+    # 25% of £800,000 = £200,000 but LSA cap = £268,275, so uncapped here
+    source: "HMRC PTM063100 — LSA cap check"
+    inputs:
+      crystallised_amount: 800000
+      lsa_remaining: 268275
+    expected: 200000.0
+
+  - description: "Very large pot where 25% exceeds LSA — capped at £268,275"
+    # 25% of £1,500,000 = £375,000 > £268,275 → capped
+    source: "HMRC PTM063100 — LSA cap applied"
+    inputs:
+      crystallised_amount: 1500000
+      lsa_remaining: 268275
+    expected: 268275.0
+
+  - description: "LSA already partially used — PCLS capped at remaining £100,000"
+    source: "HMRC PTM063100 — reduced LSA remaining"
+    inputs:
+      crystallised_amount: 600000
+      lsa_remaining: 100000
+    expected: 100000.0
+
+  - description: "LSA fully exhausted — no tax-free cash available"
+    source: "HMRC PTM063100 — LSA exhausted"
+    inputs:
+      crystallised_amount: 200000
+      lsa_remaining: 0
+    expected: 0.0

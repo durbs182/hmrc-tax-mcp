@@ -1,0 +1,8 @@
+# Full new State Pension — weekly reference amount for 2025-26.
+# Annual amount = weekly × 52. Rate set by DWP under triple-lock guarantee.
+# Source: https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates
+examples:
+  - description: "Full new State Pension weekly amount 2025-26 — £230.25/week"
+    source: "DWP State Pension rates 2025-26"
+    inputs: {}
+    expected: 230.25

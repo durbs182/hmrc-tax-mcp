@@ -1,0 +1,22 @@
+# Transferable Nil Rate Band for surviving spouse or civil partner.
+# Total NRB = £325,000 × (1 + unused_nrb_fraction from first death).
+# Maximum combined NRB = £650,000 when first spouse used none of their NRB.
+# Source: https://www.gov.uk/guidance/inheritance-tax-transfer-unused-threshold
+examples:
+  - description: "First spouse used none of NRB (e.g. left everything to surviving spouse) — full £650,000 combined"
+    source: "HMRC TNRB guidance — full transfer"
+    inputs:
+      unused_nrb_fraction: 1.0
+    expected: 650000.0
+
+  - description: "First spouse used 50% of NRB — surviving spouse gets £325,000 + £162,500 = £487,500"
+    source: "HMRC TNRB guidance — partial transfer"
+    inputs:
+      unused_nrb_fraction: 0.5
+    expected: 487500.0
+
+  - description: "First spouse used entire NRB — no transfer, surviving spouse has only own NRB £325,000"
+    source: "HMRC TNRB guidance — no transfer"
+    inputs:
+      unused_nrb_fraction: 0.0
+    expected: 325000.0

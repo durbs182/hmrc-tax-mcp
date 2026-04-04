@@ -1,0 +1,27 @@
+# Remaining Lump Sum Allowance = LSA (£268,275) minus all prior tax-free pension lump sums taken.
+# Used as an input to pension_commencement_lump_sum to enforce the lifetime cap.
+# Source: https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm063100
+examples:
+  - description: "No prior crystallisation — full LSA of £268,275 remains"
+    source: "HMRC PTM063100 — first crystallisation"
+    inputs:
+      prior_tax_free_cash: 0
+    expected: 268275
+
+  - description: "Prior PCLS of £100,000 taken — £168,275 remaining"
+    source: "arithmetic from HMRC PTM063100"
+    inputs:
+      prior_tax_free_cash: 100000
+    expected: 168275
+
+  - description: "LSA fully exhausted — £0 remaining (no negative values)"
+    source: "HMRC PTM063100 — floor at zero"
+    inputs:
+      prior_tax_free_cash: 268275
+    expected: 0
+
+  - description: "Prior cash exceeds LSA (pre-2006 rights) — floored at £0"
+    source: "HMRC PTM063100 — protection scenarios; rule floors at zero"
+    inputs:
+      prior_tax_free_cash: 300000
+    expected: 0
