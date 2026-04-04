@@ -1,0 +1,7 @@
+rule_id: pension_estate_inclusion_2027
+tax_year: "2030-31"
+jurisdiction: "rUK"
+inputs:
+  is_2027_or_later: true
+  pension_pot_value: 500000
+expected_output: 500000

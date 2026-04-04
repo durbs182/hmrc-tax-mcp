@@ -1,0 +1,7 @@
+rule_id: care_home_notional_capital
+tax_year: "2027-28"
+jurisdiction: "rUK"
+inputs:
+  actual_capital: 10000
+  notional_capital: 50000
+expected_output: 60000.0

@@ -1,0 +1,7 @@
+rule_id: iht_business_property_relief
+tax_year: "2029-30"
+jurisdiction: "rUK"
+inputs:
+  asset_value: 500000
+  relief_rate: 1.0
+expected_output: 500000.0

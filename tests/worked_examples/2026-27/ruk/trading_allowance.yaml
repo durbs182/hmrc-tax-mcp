@@ -1,0 +1,6 @@
+rule_id: trading_allowance
+tax_year: "2026-27"
+jurisdiction: "rUK"
+inputs:
+  {}
+expected_output: 1000

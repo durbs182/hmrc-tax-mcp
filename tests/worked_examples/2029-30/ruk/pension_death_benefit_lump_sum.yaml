@@ -1,0 +1,9 @@
+rule_id: pension_death_benefit_lump_sum
+tax_year: "2029-30"
+jurisdiction: "rUK"
+inputs:
+  age_at_death: 70
+  lump_sum_amount: 300000
+  lsa_remaining: 268275
+  marginal_rate: 0.4
+expected_output: 12690.0

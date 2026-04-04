@@ -1,0 +1,23 @@
+rule_id: lbtt_residential
+version: "1.0.0"
+tax_year: "2028-29"
+jurisdiction: "scotland"
+title: "Land and Buildings Transaction Tax — Residential"
+description: >
+  LBTT is the Scottish equivalent of SDLT for residential property purchases. Bands (2025-26): 0% up to £145,000; 2% on £145,001-£250,000; 5% on £250,001-£325,000; 10% on £325,001-£750,000; 12% above £750,000. Administered by Revenue Scotland.
+dsl_source: |
+  let band1 = if purchase_price > 145000 then min(purchase_price, 250000) - 145000 else 0
+  let band2 = if purchase_price > 250000 then min(purchase_price, 325000) - 250000 else 0
+  let band3 = if purchase_price > 325000 then min(purchase_price, 750000) - 325000 else 0
+  let band4 = if purchase_price > 750000 then purchase_price - 750000 else 0
+  return round(band1 * 0.02 + band2 * 0.05 + band3 * 0.10 + band4 * 0.12, 2)
+ast: {"node": "LET", "bindings": [["band1", {"node": "IF", "cond": {"node": "GT", "args": [{"node": "VAR", "name": "purchase_price"}, {"node": "CONST", "value": 145000}]}, "then": {"node": "SUB", "args": [{"node": "CALL", "name": "min", "args": [{"node": "VAR", "name": "purchase_price"}, {"node": "CONST", "value": 250000}]}, {"node": "CONST", "value": 145000}]}, "else": {"node": "CONST", "value": 0}}], ["band2", {"node": "IF", "cond": {"node": "GT", "args": [{"node": "VAR", "name": "purchase_price"}, {"node": "CONST", "value": 250000}]}, "then": {"node": "SUB", "args": [{"node": "CALL", "name": "min", "args": [{"node": "VAR", "name": "purchase_price"}, {"node": "CONST", "value": 325000}]}, {"node": "CONST", "value": 250000}]}, "else": {"node": "CONST", "value": 0}}], ["band3", {"node": "IF", "cond": {"node": "GT", "args": [{"node": "VAR", "name": "purchase_price"}, {"node": "CONST", "value": 325000}]}, "then": {"node": "SUB", "args": [{"node": "CALL", "name": "min", "args": [{"node": "VAR", "name": "purchase_price"}, {"node": "CONST", "value": 750000}]}, {"node": "CONST", "value": 325000}]}, "else": {"node": "CONST", "value": 0}}], ["band4", {"node": "IF", "cond": {"node": "GT", "args": [{"node": "VAR", "name": "purchase_price"}, {"node": "CONST", "value": 750000}]}, "then": {"node": "SUB", "args": [{"node": "VAR", "name": "purchase_price"}, {"node": "CONST", "value": 750000}]}, "else": {"node": "CONST", "value": 0}}]], "body": {"node": "CALL", "name": "round", "args": [{"node": "ADD", "args": [{"node": "ADD", "args": [{"node": "ADD", "args": [{"node": "MUL", "args": [{"node": "VAR", "name": "band1"}, {"node": "CONST", "value": 0.02}]}, {"node": "MUL", "args": [{"node": "VAR", "name": "band2"}, {"node": "CONST", "value": 0.05}]}]}, {"node": "MUL", "args": [{"node": "VAR", "name": "band3"}, {"node": "CONST", "value": 0.1}]}]}, {"node": "MUL", "args": [{"node": "VAR", "name": "band4"}, {"node": "CONST", "value": 0.12}]}]}, {"node": "CONST", "value": 2}]}}
+checksum: "b2bfff9000ecd9871a42b4227728e120252d3a27951eef5edeeb6d01a9d6126e"
+citations:
+- label: "Land and Buildings Transaction Tax (Scotland) Act 2013 Sch.2"
+  url: "https://www.legislation.gov.uk/asp/2013/11/schedule/2"
+- label: "Revenue Scotland — LBTT guidance"
+  url: "https://www.revenue.scot/land-buildings-transaction-tax/guidance"
+provenance: "manual"
+published_at: "2026-04-04"
+reviewed_by: "copilot"

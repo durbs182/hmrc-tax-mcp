@@ -1,0 +1,7 @@
+rule_id: iht_charity_reduced_rate
+tax_year: "2029-30"
+jurisdiction: "rUK"
+inputs:
+  charity_amount: 50000
+  net_estate: 400000
+expected_output: 0.36

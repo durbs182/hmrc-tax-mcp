@@ -1,0 +1,7 @@
+rule_id: pension_employer_contribution
+tax_year: "2030-31"
+jurisdiction: "rUK"
+inputs:
+  employee_contribution: 10000
+  employer_contribution: 5000
+expected_output: 15000.0
